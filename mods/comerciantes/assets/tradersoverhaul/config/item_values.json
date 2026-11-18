@@ -1,0 +1,41 @@
+{
+  "blacklistPrefixes": [
+    "game:soil-",
+    "game:gravel-",
+    "game:sand-",
+    "game:water-",
+    "game:creative",
+    "game:rot"
+  ],
+  "values": {
+    "game:clay-blue": 0.015625,
+    "game:clay-fire": 0.03125,
+    "game:feather": 0.0625,
+    "game:quicklime": 0.0625,
+    "game:peatbrick": 0.083333,
+    "game:charcoal": 0.083333,
+    "game:fat": 0.125,
+    "game:beeswax": 0.166667,
+    "game:flaxtwine": 0.166667,
+    "game:leather-normal-plain": 0.5,
+    "game:linen-normal-down": 0.5,
+    "game:ingot-copper": 1.0,
+    "game:ingot-tin": 2.0,
+    "game:ingot-silver": 3.0,
+    "game:ingot-steel": 3.0,
+    "game:ingot-gold": 4.0,
+    "game:linensack": 1.0,
+    "game:axe-felling-tinbronze": 4.0,
+    "game:axe-felling-bismuthbronze": 5.0,
+    "game:axe-felling-blackbronze": 6.0,
+    "game:pickaxe-tinbronze": 4.0,
+    "game:pickaxe-bismuthbronze": 5.0,
+    "game:pickaxe-blackbronze": 6.0,
+    "game:blade-falx-tinbronze": 4.0,
+    "game:blade-falx-bismuthbronze": 5.0,
+    "game:blade-falx-blackbronze": 6.0,
+    "game:chest-east": 10.0,
+    "game:gem-diamond-rough": 10.0,
+    "game:gem-emerald-rough": 14.0
+  }
+}

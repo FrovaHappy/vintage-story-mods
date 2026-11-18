@@ -1,0 +1,21 @@
+# Build and compilation outputs
+bin/
+obj/
+out/
+dist/
+
+# Visual Studio / Rider / VS Code
+.vs/
+.idea/
+.vscode/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+
+# OS generated files
+.DS_Store
+Thumbs.db
+
+# Vintage Story logs and local data caches
+*.log

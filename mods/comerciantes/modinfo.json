@@ -1,0 +1,16 @@
+{
+  "type": "code",
+  "modid": "tradersoverhaul",
+  "name": "Traders Overhaul",
+  "authors": [
+    "VintageStoryMods"
+  ],
+  "description": "Sistema economico dinamico para comerciantes: afinidades por tipo, demanda diaria, anti-farmeo, valoracion transparente y directorio global.",
+  "version": "0.1.0",
+  "side": "Universal",
+  "dependencies": {
+    "game": "1.22.0",
+    "survival": "1.22.0",
+    "seraphui": "0.1.0"
+  }
+}

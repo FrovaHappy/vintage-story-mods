@@ -1,0 +1,14 @@
+{
+  "type": "code",
+  "modid": "seraphui",
+  "name": "Seraph UI",
+  "authors": [
+    "VintageStoryMods"
+  ],
+  "description": "Biblioteca de componentes de interfaz grafica desacoplada y reusable para mods de Vintage Story.",
+  "version": "0.1.0",
+  "side": "Client",
+  "dependencies": {
+    "game": "1.22.0"
+  }
+}
