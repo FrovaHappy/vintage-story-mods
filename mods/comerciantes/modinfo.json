@@ -8,6 +8,7 @@
   "description": "Sistema economico dinamico para comerciantes: afinidades por tipo, demanda diaria, anti-farmeo, valoracion transparente y directorio global.",
   "version": "0.1.0",
   "side": "Universal",
+  "iconPath": "modicon.png",
   "dependencies": {
     "game": "1.22.0",
     "survival": "1.22.0",

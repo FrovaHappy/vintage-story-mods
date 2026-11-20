@@ -18,12 +18,11 @@ vintage-story-mods/
     │   ├── concept.md          # Concepto y diseño económico del Mod de Comerciantes
     │   ├── technical.md        # Definiciones técnicas, entidad, red y parches
     │   └── balance.md          # Balance numérico, afinidades, saturación y precios base
-    ├── ux-utilities/
-    │   ├── concept.md          # Concepto, módulos QoL y créditos originales
-    │   └── technical.md        # Definiciones técnicas, ConfigLib y menú de mundo
-    └── fauna-salvaje/
-        ├── concept.md          # Concepto y balance de caza (vida y carneado)
-        └── technical.md        # Definiciones técnicas sobre EntityBehaviorHealth/Harvestable
+    └── seraph-qol/
+        ├── concept.md          # Concepto unificado (UX QoL + Fauna QoL) y créditos
+        ├── technical.md        # Definiciones técnicas (ConfigLib, mundo, cliente/servidor, fauna)
+        ├── odd.md              # Diseño orientado a objetos (ODD) del dominio
+        └── informe-tecnico.md  # Análisis técnico de Vanilla Expanded, Storage Tweaks e IPN
 ```
 
 ---
@@ -34,8 +33,7 @@ vintage-story-mods/
 | :--- | :--- | :--- | :--- | :--- | :--- |
 | **Seraph UI** | `seraphui` | [`concept.md`](mods/system-ui/concept.md) | [`technical.md`](mods/system-ui/technical.md) | Activo (`0.1.0`) | Framework y biblioteca de componentes de interfaz gráfica (UI) desacoplada para Vintage Story. |
 | **Traders Overhaul** | `tradersoverhaul` | [`concept.md`](mods/comerciantes/concept.md) | [`technical.md`](mods/comerciantes/technical.md) / [`balance.md`](mods/comerciantes/balance.md) | Activo (`0.1.0`) | Rediseño integral de la economía, entidades comerciantes, inventario e interacción del jugador con UI reactiva. |
-| **Seraph QoL** | `seraphqol` | [`concept.md`](mods/ux-utilities/concept.md) | [`technical.md`](mods/ux-utilities/technical.md) | Conceptual | Suite modular de utilidades QoL y UX (inventario, resaltado de ítems, auto-refill, rastreo de proyectiles, partículas) con soporte para ConfigLib y personalización de mundo. |
-| **Fauna QoL** | `faunaqol` | [`concept.md`](mods/fauna-salvaje/concept.md) | [`technical.md`](mods/fauna-salvaje/technical.md) | Conceptual | Rebalanceo de caza: incremento de vida en animales salvajes y mayor obtención de recursos al carnear. |
+| **Seraph QoL** | `seraphqol` | [`concept.md`](mods/seraph-qol/concept.md) | [`technical.md`](mods/seraph-qol/technical.md) / [`odd.md`](mods/seraph-qol/odd.md) | Fase 3 (`0.1.0`) | Suite modular unificada de UX/QoL (inventario, calculadora de aleaciones, menús radiales F y Quick-Swap, indicadores en slots y ganado, partículas de recursos, refill, equip light, resaltado, rastreo de proyectiles) y rebalanceo de caza/carneado de fauna salvaje. |
 
 ---
 

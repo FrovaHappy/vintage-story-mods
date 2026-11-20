@@ -1,0 +1,25 @@
+{
+  "type": "code",
+  "modid": "seraphqol",
+  "name": "Seraph QoL",
+  "authors": [
+    "VintageStoryMods"
+  ],
+  "contributors": [
+    "Trojan96 (Storage Tweaks reference)",
+    "Sisco++ (Vanilla Expanded reference)",
+    "Mirinimi (Inventory Profiles Next UX reference)",
+    "CarFy (CFY Simple Refill reference)",
+    "MrFastZombie (Projectile Tracker reference)",
+    "Particles Plus / Item Pickup Highlighter references"
+  ],
+  "description": "Suite modular de calidad de vida (inventario, refill, calculadora de aleaciones, menús radiales, indicadores de slots y fauna, partículas de recursos, equip light, resaltado y rastreo de proyectiles) y rebalanceo de fauna silvestre.",
+  "version": "0.1.0",
+  "side": "Universal",
+  "iconPath": "modicon.png",
+  "dependencies": {
+    "game": "1.22.0",
+    "survival": "1.22.0",
+    "seraphui": "0.1.0"
+  }
+}

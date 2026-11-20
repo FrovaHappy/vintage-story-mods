@@ -1,0 +1,110 @@
+<!--
+  Vintage Story ModDB HTML Description Template: Traders Overhaul (tradersoverhaul)
+  Paste into mods.vintagestory.at -> Edit Mod -> Description -> Tools / Source code (<>)
+  100% inline CSS (TinyMCE-safe), English only, Vintage Story retro brown/white UI aesthetic.
+  Remember to replace #SERAPH_UI_MODDB_URL with the actual ModDB URL of Seraph UI after publishing it!
+-->
+<div style="width: 100%; box-sizing: border-box; background-color: #4a3b2c; color: #ffffff; border-top: 2px solid #7a654e; border-left: 2px solid #7a654e; border-right: 2px solid #241c14; border-bottom: 2px solid #241c14; padding: 18px; font-family: Arial, Helvetica, sans-serif; font-size: 14px; line-height: 1.55;">
+
+  <!-- RETRO TAB BAR / HEADER -->
+  <div style="margin-bottom: 14px; padding-bottom: 10px; border-bottom: 1px solid #30251b;">
+    <span style="display: inline-block; background-color: #33281d; color: #ffffff; font-weight: bold; font-size: 13px; padding: 6px 14px; margin: 0 4px 6px 0; border-top: 2px solid #1e1711; border-left: 2px solid #1e1711; border-right: 2px solid #6b5843; border-bottom: 2px solid #6b5843;">Overview</span>
+    <span style="display: inline-block; background-color: #534231; color: #ffffff; font-size: 13px; padding: 6px 14px; margin: 0 4px 6px 0; border-top: 2px solid #78634c; border-left: 2px solid #78634c; border-right: 2px solid #251d15; border-bottom: 2px solid #251d15;">Side: Universal</span>
+    <span style="display: inline-block; background-color: #534231; color: #ffffff; font-size: 13px; padding: 6px 14px; margin: 0 4px 6px 0; border-top: 2px solid #78634c; border-left: 2px solid #78634c; border-right: 2px solid #251d15; border-bottom: 2px solid #251d15;">VS 1.22.0+</span>
+    <span style="display: inline-block; background-color: #534231; color: #ffffff; font-size: 13px; padding: 6px 14px; margin: 0 4px 6px 0; border-top: 2px solid #78634c; border-left: 2px solid #78634c; border-right: 2px solid #251d15; border-bottom: 2px solid #251d15;">ConfigLib Supported</span>
+    <span style="display: inline-block; background-color: #534231; color: #ffffff; font-size: 13px; padding: 6px 14px; margin: 0 4px 6px 0; border-top: 2px solid #78634c; border-left: 2px solid #78634c; border-right: 2px solid #251d15; border-bottom: 2px solid #251d15;">EN / ES / RU In-Game</span>
+  </div>
+
+  <!-- TITLE PANEL -->
+  <div style="background-color: #3c3023; border-top: 2px solid #231b13; border-left: 2px solid #231b13; border-right: 2px solid #6d5943; border-bottom: 2px solid #6d5943; padding: 14px 16px; margin-bottom: 14px;">
+    <div style="font-size: 22px; font-weight: bold; color: #ffffff; margin-bottom: 4px;">
+      Traders Overhaul <span style="font-size: 13px; font-weight: normal; color: #dfd6cb;">(modid: <code style="background-color: #261e16; color: #ffffff; padding: 2px 6px; border: 1px solid #63503b;">tradersoverhaul</code>)</span>
+    </div>
+    <div style="color: #ffffff; font-size: 14px;">
+      A living trader economy for Vintage Story: universal item selling, archetype specialization, daily demand bonuses, anti-farming saturation, a modern trade window, and a Global Trader Directory.
+    </div>
+  </div>
+
+  <!-- REQUIRED DEPENDENCY BOX -->
+  <div style="background-color: #31261c; border-top: 2px solid #1e1711; border-left: 4px solid #35a7e8; border-right: 2px solid #695641; border-bottom: 2px solid #695641; padding: 12px 14px; margin-bottom: 16px;">
+    <strong style="color: #ffffff;">Required Dependency:</strong>
+    <span style="color: #ffffff;">You must install</span>
+    <a href="#SERAPH_UI_MODDB_URL" style="display: inline-block; background-color: #534231; color: #ffffff; font-weight: bold; text-decoration: none; padding: 3px 10px; margin: 0 4px; border-top: 2px solid #78634c; border-left: 2px solid #78634c; border-right: 2px solid #251d15; border-bottom: 2px solid #251d15;">Seraph UI (seraphui)</a>
+    <span style="color: #ffffff;">alongside this mod. Optional live settings are supported via <strong>ConfigLib</strong> or <code style="background-color: #221a13; color: #ffffff; padding: 1px 5px; border: 1px solid #5c4a37;">ModConfig/tradersoverhaul.json</code>.</span>
+  </div>
+
+  <!-- KEY FEATURES -->
+  <div style="font-size: 16px; font-weight: bold; color: #ffffff; margin: 0 0 8px 0;">
+    Core Mechanics &amp; Features
+  </div>
+  <table style="border-collapse: collapse; width: 100%; background-color: #31261c; color: #ffffff; font-size: 13px; margin-bottom: 16px; border-top: 2px solid #1e1711; border-left: 2px solid #1e1711; border-right: 2px solid #695641; border-bottom: 2px solid #695641;">
+    <thead>
+      <tr>
+        <th style="text-align: left; background-color: #3d3023; color: #ffffff; border: 1px solid #594734; padding: 9px 12px; width: 25%;">Feature</th>
+        <th style="text-align: left; background-color: #3d3023; color: #ffffff; border: 1px solid #594734; padding: 9px 12px;">How It Works</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td style="border: 1px solid #594734; padding: 9px 12px; font-weight: bold; color: #ffffff;">Universal Selling &amp; Lot Grouping</td>
+        <td style="border: 1px solid #594734; padding: 9px 12px; color: #ffffff;">Sell almost any tradeable item to any trader instead of being limited to 6&ndash;10 fixed items. Low-value items automatically bundle into clean whole-gear lots (e.g. <code style="background-color: #221a13; color: #ffffff; padding: 1px 5px;">4x &rarr; 1 gear</code>), and tool durability or food freshness adjusts value proportionally.</td>
+      </tr>
+      <tr>
+        <td style="border: 1px solid #594734; padding: 9px 12px; font-weight: bold; color: #ffffff;">Trader Archetype Affinity</td>
+        <td style="border: 1px solid #594734; padding: 9px 12px; color: #ffffff;">Every trader type (Survival Goods, Agriculture, Artisan, Building Materials, Clothing, Furniture, Luxuries, Treasure Hunter, Commodities) pays higher rates for items matching their trade and reduced rates for off-specialty goods.</td>
+      </tr>
+      <tr>
+        <td style="border: 1px solid #594734; padding: 9px 12px; font-weight: bold; color: #ffffff;">Daily Wanted Demand</td>
+        <td style="border: 1px solid #594734; padding: 9px 12px; color: #ffffff;">Preserves Vintage Story&rsquo;s periodic trader rotation &mdash; items on a trader&rsquo;s <strong>Wanted</strong> list grant an extra <strong>+20% to +50%</strong> bonus and are highlighted directly in the trade window.</td>
+      </tr>
+      <tr>
+        <td style="border: 1px solid #594734; padding: 9px 12px; font-weight: bold; color: #ffffff;">Anti-Farming Saturation</td>
+        <td style="border: 1px solid #594734; padding: 9px 12px; color: #ffffff;">Repeatedly dumping large volumes of the same item lowers payouts along a smooth diminishing-returns curve (down to a configurable minimum floor) and partially propagates to nearby traders (1500 blocks by default), recovering gradually over in-game days.</td>
+      </tr>
+      <tr>
+        <td style="border: 1px solid #594734; padding: 9px 12px; font-weight: bold; color: #ffffff;">Redesigned Trade Window</td>
+        <td style="border: 1px solid #594734; padding: 9px 12px; color: #ffffff;">Includes a multi-item shopping cart, clear stock indicators, 5 live appraisal sell slots, net gear balance, and transparent tooltips breaking down Base Value &times; Affinity &times; Daily Demand &times; Saturation.</td>
+      </tr>
+      <tr>
+        <td style="border: 1px solid #594734; padding: 9px 12px; font-weight: bold; color: #ffffff;">Global Trader Directory</td>
+        <td style="border: 1px solid #594734; padding: 9px 12px; color: #ffffff;">Inspect every trader you have discovered in the world: filter by archetype, compare wanted items, check remaining funds, distance, rotation countdown, and jump to their map marker. Strictly read-only by default so physical travel remains meaningful.</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <!-- CONTROLS & CONFIGURATION (TWO-PART RETRO BOXES) -->
+  <div style="font-size: 16px; font-weight: bold; color: #ffffff; margin: 0 0 8px 0;">
+    Controls &amp; Commands
+  </div>
+  <div style="max-width: 980px; background-color: #31261c; border-top: 2px solid #1e1711; border-left: 2px solid #1e1711; border-right: 2px solid #695641; border-bottom: 2px solid #695641; padding: 12px 16px; margin-bottom: 16px;">
+    <table style="border-collapse: collapse; width: 100%; color: #ffffff; font-size: 13px;">
+      <tbody>
+        <tr>
+          <td style="padding: 5px 10px 5px 0; width: 220px;"><span style="display: inline-block; background-color: #534231; color: #ffffff; font-weight: bold; padding: 2px 9px; border-top: 2px solid #78634c; border-left: 2px solid #78634c; border-right: 2px solid #251d15; border-bottom: 2px solid #251d15;">K</span></td>
+          <td style="padding: 5px 0; color: #ffffff;">Open / close the <strong>Known Traders Directory</strong> (rebindable in Controls)</td>
+        </tr>
+        <tr>
+          <td style="padding: 5px 10px 5px 0;"><span style="display: inline-block; background-color: #534231; color: #ffffff; font-weight: bold; padding: 2px 9px; border-top: 2px solid #78634c; border-left: 2px solid #78634c; border-right: 2px solid #251d15; border-bottom: 2px solid #251d15;">/comerciantes</span></td>
+          <td style="padding: 5px 0; color: #ffffff;">Client chat command to open the Global Trader Directory</td>
+        </tr>
+        <tr>
+          <td style="padding: 5px 10px 5px 0;"><span style="display: inline-block; background-color: #534231; color: #ffffff; font-weight: bold; padding: 2px 9px; border-top: 2px solid #78634c; border-left: 2px solid #78634c; border-right: 2px solid #251d15; border-bottom: 2px solid #251d15;">Left / Right Click</span></td>
+          <td style="padding: 5px 0; color: #ffffff;">In the trade window: Left-click stock adds +1 to cart; Right-click removes -1</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div style="font-size: 16px; font-weight: bold; color: #ffffff; margin: 0 0 8px 0;">
+    Configuration Highlights
+  </div>
+  <div style="max-width: 980px; background-color: #31261c; border-top: 2px solid #1e1711; border-left: 2px solid #1e1711; border-right: 2px solid #695641; border-bottom: 2px solid #695641; padding: 12px 16px;">
+    <ul style="margin: 0; padding-left: 18px; color: #ffffff; font-size: 13px;">
+      <li style="margin-bottom: 6px;"><strong>Economy Presets:</strong> <em>Stingy</em> (higher buy prices, 75% sell payout), <em>Balanced</em> (default 100%), or <em>Businessman</em> (120% sell payout).</li>
+      <li style="margin-bottom: 6px;"><strong>Directory Sync Mode:</strong> <em>Last Visited Snapshot</em> (default, rewards revisiting traders) or <em>Live Known Traders</em> (updates automatically as days pass).</li>
+      <li style="margin-bottom: 6px;"><strong>Saturation Scope:</strong> <em>Nearby Partial</em> (default), <em>Local Only</em>, or <em>Global</em> &mdash; with tunable spillover radius, recovery rate, and floor.</li>
+      <li style="margin-bottom: 0;"><strong>Optional Inventory Valuation:</strong> Toggle <code style="background-color: #221a13; color: #ffffff; padding: 1px 5px;">ShowValuationInInventoryTooltip</code> to preview base values on normal inventory tooltips.</li>
+    </ul>
+  </div>
+
+</div>

@@ -1,0 +1,137 @@
+<!--
+  Vintage Story ModDB HTML Description Template: Seraph QoL (seraphqol)
+  Paste into mods.vintagestory.at -> Edit Mod -> Description -> Tools / Source code (<>)
+  100% inline CSS (TinyMCE-safe), English only, Vintage Story retro brown/white UI aesthetic.
+  Remember to replace #SERAPH_UI_MODDB_URL with the actual ModDB URL of Seraph UI after publishing it!
+-->
+<div style="width: 100%; box-sizing: border-box; background-color: #4a3b2c; color: #ffffff; border-top: 2px solid #7a654e; border-left: 2px solid #7a654e; border-right: 2px solid #241c14; border-bottom: 2px solid #241c14; padding: 18px; font-family: Arial, Helvetica, sans-serif; font-size: 14px; line-height: 1.55;">
+
+  <!-- RETRO TAB BAR / HEADER -->
+  <div style="margin-bottom: 14px; padding-bottom: 10px; border-bottom: 1px solid #30251b;">
+    <span style="display: inline-block; background-color: #33281d; color: #ffffff; font-weight: bold; font-size: 13px; padding: 6px 14px; margin: 0 4px 6px 0; border-top: 2px solid #1e1711; border-left: 2px solid #1e1711; border-right: 2px solid #6b5843; border-bottom: 2px solid #6b5843;">Modules</span>
+    <span style="display: inline-block; background-color: #534231; color: #ffffff; font-size: 13px; padding: 6px 14px; margin: 0 4px 6px 0; border-top: 2px solid #78634c; border-left: 2px solid #78634c; border-right: 2px solid #251d15; border-bottom: 2px solid #251d15;">Side: Universal</span>
+    <span style="display: inline-block; background-color: #534231; color: #ffffff; font-size: 13px; padding: 6px 14px; margin: 0 4px 6px 0; border-top: 2px solid #78634c; border-left: 2px solid #78634c; border-right: 2px solid #251d15; border-bottom: 2px solid #251d15;">VS 1.22.0+</span>
+    <span style="display: inline-block; background-color: #534231; color: #ffffff; font-size: 13px; padding: 6px 14px; margin: 0 4px 6px 0; border-top: 2px solid #78634c; border-left: 2px solid #78634c; border-right: 2px solid #251d15; border-bottom: 2px solid #251d15;">ConfigLib &amp; JSON</span>
+    <span style="display: inline-block; background-color: #534231; color: #ffffff; font-size: 13px; padding: 6px 14px; margin: 0 4px 6px 0; border-top: 2px solid #78634c; border-left: 2px solid #78634c; border-right: 2px solid #251d15; border-bottom: 2px solid #251d15;">EN / ES / RU In-Game</span>
+  </div>
+
+  <!-- TITLE PANEL -->
+  <div style="background-color: #3c3023; border-top: 2px solid #231b13; border-left: 2px solid #231b13; border-right: 2px solid #6d5943; border-bottom: 2px solid #6d5943; padding: 14px 16px; margin-bottom: 14px;">
+    <div style="font-size: 22px; font-weight: bold; color: #ffffff; margin-bottom: 4px;">
+      Seraph QoL <span style="font-size: 13px; font-weight: normal; color: #dfd6cb;">(modid: <code style="background-color: #261e16; color: #ffffff; padding: 2px 6px; border: 1px solid #63503b;">seraphqol</code>)</span>
+    </div>
+    <div style="color: #ffffff; font-size: 14px;">
+      A unified, modular Quality-of-Life suite for Vintage Story: inventory sorting &amp; protection, alloy calculator, radial menus, quick light &amp; shield equip, hotbar refill, slot status bars, configurable entity health bars, livestock badges, exploration helpers, and tactical wild fauna rebalancing.
+    </div>
+  </div>
+
+  <!-- REQUIRED DEPENDENCY BOX -->
+  <div style="background-color: #31261c; border-top: 2px solid #1e1711; border-left: 4px solid #35a7e8; border-right: 2px solid #695641; border-bottom: 2px solid #695641; padding: 12px 14px; margin-bottom: 16px;">
+    <strong style="color: #ffffff;">Required Dependency:</strong>
+    <span style="color: #ffffff;">Install</span>
+    <a href="#SERAPH_UI_MODDB_URL" style="display: inline-block; background-color: #534231; color: #ffffff; font-weight: bold; text-decoration: none; padding: 3px 10px; margin: 0 4px; border-top: 2px solid #78634c; border-left: 2px solid #78634c; border-right: 2px solid #251d15; border-bottom: 2px solid #251d15;">Seraph UI (seraphui)</a>
+    <span style="color: #ffffff;">alongside this mod. Every module can be enabled, disabled, or tuned individually via <strong>ConfigLib</strong> or the <code style="background-color: #221a13; color: #ffffff; padding: 1px 5px; border: 1px solid #5c4a37;">.json</code> config files.</span>
+  </div>
+
+  <!-- MODULAR FEATURES TABLE -->
+  <div style="font-size: 16px; font-weight: bold; color: #ffffff; margin: 0 0 8px 0;">
+    Included Modules
+  </div>
+  <table style="border-collapse: collapse; width: 100%; background-color: #31261c; color: #ffffff; font-size: 13px; margin-bottom: 16px; border-top: 2px solid #1e1711; border-left: 2px solid #1e1711; border-right: 2px solid #695641; border-bottom: 2px solid #695641;">
+    <thead>
+      <tr>
+        <th style="text-align: left; background-color: #3d3023; color: #ffffff; border: 1px solid #594734; padding: 9px 12px; width: 25%;">Module</th>
+        <th style="text-align: left; background-color: #3d3023; color: #ffffff; border: 1px solid #594734; padding: 9px 12px;">Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td style="border: 1px solid #594734; padding: 9px 12px; font-weight: bold; color: #ffffff;">Inventory &amp; Containers</td>
+        <td style="border: 1px solid #594734; padding: 9px 12px; color: #ffffff;">Title-bar buttons to <strong>Compact &amp; Sort</strong> (scroll mouse wheel over the button to cycle Category / Name / Code / Count), <strong>Quick Store</strong> into open containers, <strong>Store Nearby</strong> (<code style="background-color: #221a13; color: #ffffff; padding: 1px 4px;">Shift+G</code>, respects land claims), <strong>Favorites</strong>, <strong>Locked Slots</strong>, optional <strong>Force-Stack Perishables</strong>, and matching item slot highlights.</td>
+      </tr>
+      <tr>
+        <td style="border: 1px solid #594734; padding: 9px 12px; font-weight: bold; color: #ffffff;">Alloy Calculator</td>
+        <td style="border: 1px solid #594734; padding: 9px 12px; color: #ffffff;">Attaches automatically next to firepits holding a fired crucible. Choose any alloy or pure metal, plan exact waste-free nugget counts and melt temperatures, estimate fuel, and deposit nuggets + fuel in one click (optionally scanning nearby containers).</td>
+      </tr>
+      <tr>
+        <td style="border: 1px solid #594734; padding: 9px 12px; font-weight: bold; color: #ffffff;">Radial Menus, Quick Light &amp; Shield</td>
+        <td style="border: 1px solid #594734; padding: 9px 12px; color: #ffffff;">Replaces the Tool Mode grid (<code style="background-color: #221a13; color: #ffffff; padding: 1px 4px;">F</code>) with a Vintage Story beveled radial wheel (supports mouse wheel paging when &gt;10 modes), adds a <strong>Quick-Swap Radial</strong> (<code style="background-color: #221a13; color: #ffffff; padding: 1px 4px;">Alt+F</code>, supports both tap-to-click and hold-to-release), <strong>Equip Brightest Light</strong> (<code style="background-color: #221a13; color: #ffffff; padding: 1px 4px;">Alt+L</code>), and <strong>Equip Best Shield</strong> (<code style="background-color: #221a13; color: #ffffff; padding: 1px 4px;">Alt+B</code>) to equip your highest-absorption shield into offhand/hotbar and toggle back to your previous item.</td>
+      </tr>
+      <tr>
+        <td style="border: 1px solid #594734; padding: 9px 12px; font-weight: bold; color: #ffffff;">Hotbar Refill</td>
+        <td style="border: 1px solid #594734; padding: 9px 12px; color: #ffffff;">Automatically refills depleted blocks and consumables on your hotbar from unlocked backpack slots, with optional preventive tool swap before breaking, configurable delay, stack preference, and item blacklist.</td>
+      </tr>
+      <tr>
+        <td style="border: 1px solid #594734; padding: 9px 12px; font-weight: bold; color: #ffffff;">Slot Status Indicators</td>
+        <td style="border: 1px solid #594734; padding: 9px 12px; color: #ffffff;">Compact bars on inventory slots for food freshness (pulses red when spoiling soon), liquid fill level, crucible molten metal, meal servings, preparation progress, clothing condition, and night-vision temporal fuel.</td>
+      </tr>
+      <tr>
+        <td style="border: 1px solid #594734; padding: 9px 12px; font-weight: bold; color: #ffffff;">Exploration &amp; Tracking</td>
+        <td style="border: 1px solid #594734; padding: 9px 12px; color: #ffffff;"><strong>Ground Item Highlight</strong> (hold <code style="background-color: #221a13; color: #ffffff; padding: 1px 4px;">Shift</code> to highlight nearby dropped items and labels), <strong>Resource Particles</strong> (resin logs, Terra Preta, tall sparks above buried meteoric iron), and <strong>Projectile Tracker</strong> (temporary map marker where arrows/spears land).</td>
+      </tr>
+      <tr>
+        <td style="border: 1px solid #594734; padding: 9px 12px; font-weight: bold; color: #ffffff;">Entity Health Bars, Livestock Badges &amp; Fauna Rebalance</td>
+        <td style="border: 1px solid #594734; padding: 9px 12px; color: #ffffff;">Displays retro-framed <strong>Entity Health Bars</strong> configurable per entity type (<em>Hostiles &amp; Predators</em>, <em>Passive Fauna &amp; Livestock</em>, <em>Traders &amp; NPCs</em>, <em>Other Players</em>, plus <em>Only When Damaged</em>, <em>Require Sneak</em>, and range). Hold <code style="background-color: #221a13; color: #ffffff; padding: 1px 4px;">Shift</code> near animals to stack separate square badges for <strong>Sex</strong> (&#9794;/&#9792;), <strong>Pregnancy</strong> (+), and <strong>Generation</strong> (I, II, III...) neatly above the health bar. Includes server-side wild animal HP &amp; butchering drop scaling with 5 presets (<em>Balanced Tactical</em>, <em>Vanilla</em>, <em>Realistic Hunt</em>, <em>Abundant Resources</em>, <em>Hardcore Predators</em>).</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <!-- HOTKEYS -->
+  <div style="font-size: 16px; font-weight: bold; color: #ffffff; margin: 0 0 8px 0;">
+    Default Hotkeys
+  </div>
+  <div style="max-width: 980px; background-color: #31261c; border-top: 2px solid #1e1711; border-left: 2px solid #1e1711; border-right: 2px solid #695641; border-bottom: 2px solid #695641; padding: 12px 16px; margin-bottom: 16px;">
+    <table style="border-collapse: collapse; width: 100%; color: #ffffff; font-size: 13px;">
+      <tbody>
+        <tr>
+          <td style="padding: 5px 12px 5px 0; width: 220px;"><span style="display: inline-block; background-color: #534231; color: #ffffff; font-weight: bold; padding: 2px 9px; border-top: 2px solid #78634c; border-left: 2px solid #78634c; border-right: 2px solid #251d15; border-bottom: 2px solid #251d15;">Shift + G</span></td>
+          <td style="padding: 5px 0; color: #ffffff;">Store Nearby &mdash; deposit matching backpack items into nearby containers</td>
+        </tr>
+        <tr>
+          <td style="padding: 5px 12px 5px 0;"><span style="display: inline-block; background-color: #534231; color: #ffffff; font-weight: bold; padding: 2px 9px; border-top: 2px solid #78634c; border-left: 2px solid #78634c; border-right: 2px solid #251d15; border-bottom: 2px solid #251d15;">F</span> / <span style="display: inline-block; background-color: #534231; color: #ffffff; font-weight: bold; padding: 2px 9px; border-top: 2px solid #78634c; border-left: 2px solid #78634c; border-right: 2px solid #251d15; border-bottom: 2px solid #251d15;">Alt + F</span></td>
+          <td style="padding: 5px 0; color: #ffffff;">Tool Mode Radial Wheel (F) &amp; Quick-Swap Tool/Light Radial (Alt+F)</td>
+        </tr>
+        <tr>
+          <td style="padding: 5px 12px 5px 0;"><span style="display: inline-block; background-color: #534231; color: #ffffff; font-weight: bold; padding: 2px 9px; border-top: 2px solid #78634c; border-left: 2px solid #78634c; border-right: 2px solid #251d15; border-bottom: 2px solid #251d15;">Alt + L</span></td>
+          <td style="padding: 5px 0; color: #ffffff;">Equip / restore the brightest light source in your offhand (hotbar keybind also available in Controls)</td>
+        </tr>
+        <tr>
+          <td style="padding: 5px 12px 5px 0;"><span style="display: inline-block; background-color: #534231; color: #ffffff; font-weight: bold; padding: 2px 9px; border-top: 2px solid #78634c; border-left: 2px solid #78634c; border-right: 2px solid #251d15; border-bottom: 2px solid #251d15;">Alt + B</span></td>
+          <td style="padding: 5px 0; color: #ffffff;">Equip / restore the best shield in your offhand (hotbar keybind also available in Controls)</td>
+        </tr>
+        <tr>
+          <td style="padding: 5px 12px 5px 0;"><span style="display: inline-block; background-color: #534231; color: #ffffff; font-weight: bold; padding: 2px 9px; border-top: 2px solid #78634c; border-left: 2px solid #78634c; border-right: 2px solid #251d15; border-bottom: 2px solid #251d15;">Shift (Sneak)</span></td>
+          <td style="padding: 5px 0; color: #ffffff;">Highlight nearby ground items &amp; show animal sex/pregnancy/generation square badges above health bars</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- CONFIGURATION -->
+  <div style="font-size: 16px; font-weight: bold; color: #ffffff; margin: 0 0 8px 0;">
+    Configuration Files
+  </div>
+  <div style="max-width: 980px; background-color: #31261c; border-top: 2px solid #1e1711; border-left: 2px solid #1e1711; border-right: 2px solid #695641; border-bottom: 2px solid #695641; padding: 12px 16px; margin-bottom: 16px; font-size: 13px; color: #ffffff;">
+    Client preferences are saved to <code style="background-color: #221a13; color: #ffffff; padding: 1px 5px; border: 1px solid #5c4a37;">ModConfig/seraphqol.json</code> and server rules to <code style="background-color: #221a13; color: #ffffff; padding: 1px 5px; border: 1px solid #5c4a37;">ModConfig/seraphqol-server.json</code>. Both support editing via <strong>ConfigLib</strong> and direct <code style="background-color: #221a13; color: #ffffff; padding: 1px 5px; border: 1px solid #5c4a37;">.json</code> configuration.
+  </div>
+
+  <!-- CREDITS & INSPIRATIONS (DIRECT MOD LINKS) -->
+  <div style="font-size: 16px; font-weight: bold; color: #ffffff; margin: 0 0 8px 0;">
+    Credits &amp; Inspirations
+  </div>
+  <div style="background-color: #31261c; border-top: 2px solid #1e1711; border-left: 2px solid #1e1711; border-right: 2px solid #695641; border-bottom: 2px solid #695641; padding: 12px 16px; font-size: 13px; color: #ffffff;">
+    <p style="margin: 0 0 10px 0; color: #ffffff;">
+      <strong>Seraph QoL</strong> is a clean-room C# implementation inspired by the design and UX ideas of the following mods. Full credit to their original authors:
+    </p>
+    <div style="line-height: 2.2;">
+      <a href="https://mods.vintagestory.at/simplerefill" target="_blank" rel="noopener noreferrer" style="display: inline-block; background-color: #534231; color: #ffffff; font-weight: bold; text-decoration: none; padding: 3px 11px; margin: 0 6px 6px 0; border-top: 2px solid #78634c; border-left: 2px solid #78634c; border-right: 2px solid #251d15; border-bottom: 2px solid #251d15;">CFY Simple Hotbar Refill (CarFy)</a>
+      <a href="https://mods.vintagestory.at/storagetweaks" target="_blank" rel="noopener noreferrer" style="display: inline-block; background-color: #534231; color: #ffffff; font-weight: bold; text-decoration: none; padding: 3px 11px; margin: 0 6px 6px 0; border-top: 2px solid #78634c; border-left: 2px solid #78634c; border-right: 2px solid #251d15; border-bottom: 2px solid #251d15;">Storage Tweaks (Trojan96)</a>
+      <a href="https://mods.vintagestory.at/vanillaexpanded" target="_blank" rel="noopener noreferrer" style="display: inline-block; background-color: #534231; color: #ffffff; font-weight: bold; text-decoration: none; padding: 3px 11px; margin: 0 6px 6px 0; border-top: 2px solid #78634c; border-left: 2px solid #78634c; border-right: 2px solid #251d15; border-bottom: 2px solid #251d15;">Vanilla: Expanded (Sisco++)</a>
+      <a href="https://www.curseforge.com/minecraft/mc-mods/inventory-profiles-next" target="_blank" rel="noopener noreferrer" style="display: inline-block; background-color: #534231; color: #ffffff; font-weight: bold; text-decoration: none; padding: 3px 11px; margin: 0 6px 6px 0; border-top: 2px solid #78634c; border-left: 2px solid #78634c; border-right: 2px solid #251d15; border-bottom: 2px solid #251d15;">Inventory Profiles Next (Mirinimi)</a>
+      <a href="https://mods.vintagestory.at/projectiletracker" target="_blank" rel="noopener noreferrer" style="display: inline-block; background-color: #534231; color: #ffffff; font-weight: bold; text-decoration: none; padding: 3px 11px; margin: 0 6px 6px 0; border-top: 2px solid #78634c; border-left: 2px solid #78634c; border-right: 2px solid #251d15; border-bottom: 2px solid #251d15;">Projectile Tracker (MrFastZombie)</a>
+      <a href="https://mods.vintagestory.at/show/mod/25352" target="_blank" rel="noopener noreferrer" style="display: inline-block; background-color: #534231; color: #ffffff; font-weight: bold; text-decoration: none; padding: 3px 11px; margin: 0 6px 6px 0; border-top: 2px solid #78634c; border-left: 2px solid #78634c; border-right: 2px solid #251d15; border-bottom: 2px solid #251d15;">Item Pickup Highlighter</a>
+      <a href="https://mods.vintagestory.at/particlesplus" target="_blank" rel="noopener noreferrer" style="display: inline-block; background-color: #534231; color: #ffffff; font-weight: bold; text-decoration: none; padding: 3px 11px; margin: 0 6px 6px 0; border-top: 2px solid #78634c; border-left: 2px solid #78634c; border-right: 2px solid #251d15; border-bottom: 2px solid #251d15;">Particles Plus</a>
+    </div>
+  </div>
+
+</div>

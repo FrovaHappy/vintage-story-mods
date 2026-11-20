@@ -20,9 +20,12 @@ public abstract class UiDialogBase : GuiDialog
 
     public override string ToggleKeyCombinationCode => string.Empty;
 
+    protected virtual ElementBounds CreateDialogBounds() =>
+        ElementStdBounds.AutosizedMainDialog.WithAlignment(EnumDialogArea.CenterMiddle);
+
     protected void ComposeDialog()
     {
-        ElementBounds dialogBounds = ElementStdBounds.AutosizedMainDialog.WithAlignment(EnumDialogArea.CenterMiddle);
+        ElementBounds dialogBounds = CreateDialogBounds();
         ElementBounds bgBounds = ElementBounds.Fill.WithFixedPadding(Theme.DialogPadding);
         bgBounds.BothSizing = ElementSizing.FitToChildren;
 

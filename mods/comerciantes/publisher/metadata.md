@@ -1,0 +1,35 @@
+# Publisher Metadata — Traders Overhaul (`tradersoverhaul`)
+
+## Ficha ModDB
+- **Nombre público:** Traders Overhaul
+- **`modid`:** `tradersoverhaul`
+- **Versión actual:** `0.1.0`
+- **Lado (`Side`):** `Universal`
+- **Versión de Vintage Story:** `1.22.0`
+- **Categoría sugerida:** Economy / Gameplay
+- **Tags sugeridos:** `Traders`, `Economy`, `QoL`, `UI`, `ConfigLib`
+- **Dependencias obligatorias:** `game` (`1.22.0`), `survival` (`1.22.0`), `seraphui` (`0.1.0`)
+- **Idiomas soportados:** `en`, `es-es`, `es-419`, `ru`
+- **Canales de configuración:** `ModConfig/tradersoverhaul.json` + **ConfigLib**
+
+## Resumen corto (ModDB Tagline)
+> A living trader economy for Vintage Story: universal selling, archetype affinities, daily wanted bonuses, anti-farming saturation, modern trade UI, and Global Trader Directory.
+
+## Estado de Media y Templates
+- [x] `publisher/description.html` (HTML TinyMCE-safe actualizado)
+- [x] `publisher/images/modicon.png` (`256x256` PNG — enlazado a raíz del `.zip`)
+- [ ] `publisher/images/icon.jpg` (`1024x1024` — pendiente)
+- [ ] `publisher/images/cover.jpg` (`1376x768` — pendiente)
+- [ ] `publisher/screenshots/` (capturas de la ventana de comercio, tooltips y directorio)
+
+## URLs y Placeholders pendientes antes de publicar
+- Reemplazar `#SERAPH_UI_MODDB_URL` en `publisher/description.html` por la URL publicada de **Seraph UI**.
+- **URL ModDB asignada:** `TBD`
+- **Repositorio / Source URL:** `TBD`
+
+## Checklist de Release (`0.1.0`)
+- [x] `modinfo.json` con `iconPath: "modicon.png"`
+- [x] `Comerciantes.csproj` empaqueta `modicon.png` en la raíz del `.zip`
+- [ ] Generar `publisher/images/icon.jpg` y `publisher/images/cover.jpg`
+- [ ] Capturas limpias añadidas en `publisher/screenshots/`
+- [ ] Prueba en juego con `-DeployToGame -IsolateMods`

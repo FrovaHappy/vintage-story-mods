@@ -25,8 +25,9 @@ $vsDataMods = Join-Path $vsDataDir "Mods"
 $clientSettingsPath = Join-Path $vsDataDir "clientsettings.json"
 $backupPath = Join-Path $vsDataDir "clientsettings.disabledMods.backup.json"
 $distDir = Join-Path $repoRoot "dist"
-$ownModIds = @("seraphui", "tradersoverhaul", "systemui", "comerciantes")
-$ownZipNames = @("seraphui.zip", "tradersoverhaul.zip")
+$ownModIds = @("seraphui", "tradersoverhaul", "seraphqol", "systemui", "comerciantes")
+$isolationKeepActiveModIds = $ownModIds + @("configlib", "vsimgui")
+$ownZipNames = @("seraphui.zip", "tradersoverhaul.zip", "seraphqol.zip")
 $legacyZipNames = @("systemui.zip", "comerciantes.zip")
 
 function Test-GameRunning {
@@ -139,7 +140,8 @@ function Update-DisabledMods([scriptblock]$transform) {
 function Invoke-BuildAndPackage([bool]$deployToUserMods, [string]$config) {
     $mods = @(
         @{ Name = "seraphui"; OutDir = Join-Path $repoRoot "mods\system-ui\bin\$config\net10.0" },
-        @{ Name = "tradersoverhaul"; OutDir = Join-Path $repoRoot "mods\comerciantes\bin\$config\net10.0" }
+        @{ Name = "tradersoverhaul"; OutDir = Join-Path $repoRoot "mods\comerciantes\bin\$config\net10.0" },
+        @{ Name = "seraphqol"; OutDir = Join-Path $repoRoot "mods\seraph-qol\bin\$config\net10.0" }
     )
 
     foreach ($mod in $mods) {
@@ -204,21 +206,21 @@ function Invoke-IsolateMods {
         $newDisabled = New-Object System.Collections.Generic.HashSet[string]([System.StringComparer]::OrdinalIgnoreCase)
         foreach ($entry in $currentDisabled) {
             $modId = ($entry -split "@")[0].ToLowerInvariant()
-            if ($ownModIds -notcontains $modId) {
+            if ($isolationKeepActiveModIds -notcontains $modId) {
                 [void]$newDisabled.Add($entry)
             }
         }
 
         foreach ($mod in $installed) {
-            if ($ownModIds -contains $mod.ModId) { continue }
+            if ($isolationKeepActiveModIds -contains $mod.ModId) { continue }
             [void]$newDisabled.Add($mod.Key)
         }
 
         return @($newDisabled | Sort-Object)
     }
 
-    $isolatedCount = ($installed | Where-Object { $ownModIds -notcontains $_.ModId }).Count
-    Write-Host "Aislamiento activo: $isolatedCount mods de terceros desactivados temporalmente; habilitados solo seraphui y tradersoverhaul (mas vanilla)." -ForegroundColor Green
+    $isolatedCount = ($installed | Where-Object { $isolationKeepActiveModIds -notcontains $_.ModId }).Count
+    Write-Host "Aislamiento activo: $isolatedCount mods de terceros desactivados temporalmente; habilitados solo seraphui, tradersoverhaul, seraphqol, configlib y vsimgui (mas vanilla)." -ForegroundColor Green
 }
 
 function Invoke-CleanDist {
@@ -289,12 +291,13 @@ function Show-CliMenu {
         $gameRunning = Test-GameRunning
         $sysUiDeployed = Test-Path (Join-Path $vsDataMods "seraphui.zip")
         $comDeployed = Test-Path (Join-Path $vsDataMods "tradersoverhaul.zip")
+        $qolDeployed = Test-Path (Join-Path $vsDataMods "seraphqol.zip")
         $hasBackup = Test-Path $backupPath
 
         $items = @(
             @{ Kind = "Toggle"; Key = "Build";     Label = "Compilar solucion y empaquetar en dist\";                    Value = $optBuild },
             @{ Kind = "Toggle"; Key = "Deploy";    Label = "Desplegar .zip en VintagestoryData\Mods";                   Value = $optDeploy },
-            @{ Kind = "Toggle"; Key = "Isolate";   Label = "Aislar mods (desactivar terceros temporalmente)";            Value = $optIsolate },
+            @{ Kind = "Toggle"; Key = "Isolate";   Label = "Aislar mods (desactivar terceros, mantener ConfigLib/ImGui)"; Value = $optIsolate },
             @{ Kind = "Toggle"; Key = "Release";   Label = "Modo Release (desactivado = Debug con logs en juego)";        Value = $optRelease },
             @{ Kind = "Action"; Key = "Apply";     Label = "Ejecutar configuracion seleccionada" },
             @{ Kind = "Toggle"; Key = "CleanDist"; Label = "Tambien limpiar dist\ al eliminar mods";                    Value = $optCleanDist },
@@ -309,7 +312,7 @@ function Show-CliMenu {
         Write-Host "      Vintage Story Mods - Gestor Interactivo por Teclado        " -ForegroundColor White
         Write-Host "=================================================================" -ForegroundColor DarkCyan
         Write-Host ("  Juego     : {0}" -f $(if ($gameRunning) { "EN EJECUCION (cierra antes de cambiar settings)" } else { "Cerrado" })) -ForegroundColor $(if ($gameRunning) { "Red" } else { "Green" })
-        Write-Host ("  Mods      : seraphui.zip={0} | tradersoverhaul.zip={1}" -f $(if ($sysUiDeployed) { "SI" } else { "NO" }), $(if ($comDeployed) { "SI" } else { "NO" }))
+        Write-Host ("  Mods      : seraphui={0} | tradersoverhaul={1} | seraphqol={2}" -f $(if ($sysUiDeployed) { "SI" } else { "NO" }), $(if ($comDeployed) { "SI" } else { "NO" }), $(if ($qolDeployed) { "SI" } else { "NO" }))
         Write-Host ("  Respaldo  : {0}" -f $(if ($hasBackup) { "ACTIVO (mods aislados)" } else { "Ninguno" })) -ForegroundColor $(if ($hasBackup) { "Yellow" } else { "DarkGray" })
         Write-Host "-----------------------------------------------------------------" -ForegroundColor DarkCyan
         Write-Host "  CONFIGURACION Y ACCIONES:" -ForegroundColor Gray
