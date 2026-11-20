@@ -16,7 +16,7 @@ Este documento define el flujo de trabajo y los principios obligatorios para dis
   - `tests/Comerciantes.Tests`
   - `tests/SeraphQoL.Tests`
 - **Configuración y Publicación de mods**:
-  - Las preferencias y políticas se gestionan exclusivamente mediante archivos `.json` en `ModConfig/` (`LoadModConfig` / `StoreModConfig`) y su integración con **ConfigLib** (`assets/<modid>/config/configlib-patches.json`), sin comandos de chat propios para ajustes ni overrides por `/worldconfig`.
+  - Las preferencias y políticas se gestionan exclusivamente mediante archivos `.json` en `ModConfig/` (`LoadModConfig` / `StoreModConfig`) y su integración con **ConfigLib** (`assets/<modid>/config/configlib-patches.json`); no implementar comandos personalizados de chat ni overrides por `/worldconfig` (las acciones del jugador usan atajos en Controles o UI nativa).
   - Cada mod mantiene sus materiales de publicación en `mods/<mod>/publisher/` (`description.html`, `metadata.md`, `images/`, `screenshots/`), siguiendo las convenciones y campos obligatorios definidos en [`docs/mod-publisher-guide.md`](docs/mod-publisher-guide.md).
   - Todo mod debe enlazar `publisher\images\modicon.png` hacia `<Link>modicon.png</Link>` en su `.csproj` y declarar `"iconPath": "modicon.png"` en `modinfo.json` para que cargue correctamente en el Gestor de Mods de Vintage Story.
 - **Comandos de verificación estándar**:

@@ -1,5 +1,4 @@
 using System.Globalization;
-using System.Text;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
 using Vintagestory.API.Datastructures;
@@ -31,8 +30,6 @@ public enum EconomyMode
 /// </summary>
 public sealed class ComerciantesConfig
 {
-    public const string DefaultDirectoryCommandName = "tradersoverhaul";
-
     [JsonConverter(typeof(StringEnumConverter))]
     public EconomyMode EconomyMode { get; set; } = EconomyMode.Balanced;
 
@@ -58,34 +55,6 @@ public sealed class ComerciantesConfig
     public bool ShowValuationInInventoryTooltip { get; set; } = false;
     public bool EnableInstantTrade { get; set; } = false;
     public bool EnableDebugLogging { get; set; } = false;
-    public bool EnableDirectoryCommand { get; set; } = true;
-    public string DirectoryCommandName { get; set; } = DefaultDirectoryCommandName;
-
-    public void Normalize()
-    {
-        DirectoryCommandName = NormalizeDirectoryCommandName(DirectoryCommandName);
-    }
-
-    public static string NormalizeDirectoryCommandName(string? rawName)
-    {
-        if (string.IsNullOrWhiteSpace(rawName)) return DefaultDirectoryCommandName;
-        string cleaned = rawName.Trim().TrimStart('/', '.').Trim();
-        if (string.IsNullOrWhiteSpace(cleaned)) return DefaultDirectoryCommandName;
-
-        var sb = new StringBuilder(cleaned.Length);
-        foreach (char ch in cleaned)
-        {
-            if (char.IsLetterOrDigit(ch) || ch == '-' || ch == '_')
-            {
-                sb.Append(char.ToLowerInvariant(ch));
-            }
-        }
-
-        return sb.Length > 0 ? sb.ToString() : DefaultDirectoryCommandName;
-    }
-
-    public string GetEffectiveDirectoryCommandName() =>
-        NormalizeDirectoryCommandName(DirectoryCommandName);
 
     public bool IsWithinTradeDistance(double distance) =>
         EnableInstantTrade || distance <= MaxPhysicalTradeDistance;
@@ -153,16 +122,6 @@ public sealed class ComerciantesConfig
                     return true;
                 }
                 return false;
-            case nameof(EnableDirectoryCommand):
-                if (TryToBool(raw, out bool enableCmd))
-                {
-                    EnableDirectoryCommand = enableCmd;
-                    return true;
-                }
-                return false;
-            case nameof(DirectoryCommandName):
-                DirectoryCommandName = NormalizeDirectoryCommandName(raw.ToString());
-                return true;
             case nameof(SaturationSpilloverRadius):
                 if (TryToDouble(raw, out double radius)) { SaturationSpilloverRadius = radius; return true; }
                 return false;

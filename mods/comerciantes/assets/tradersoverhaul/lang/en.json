@@ -1,13 +1,9 @@
 {
   "hotkey-directory": "Known Traders Directory",
-  "cmd-directory-desc": "Opens the global directory of known traders",
-
   "trader-default-name": "Trader",
-
   "mode-stingy": "Stingy",
   "mode-balanced": "Balanced",
   "mode-businessman": "Businessmen",
-
   "archetype-survivalgoods": "Survival goods",
   "archetype-agriculture": "Agriculture",
   "archetype-artisan": "Artisan",
@@ -17,7 +13,6 @@
   "archetype-furniture": "Furniture",
   "archetype-luxuries": "Luxuries",
   "archetype-treasurehunter": "Treasure hunter",
-
   "gui-trade-title-fallback": "Traders Overhaul",
   "gui-trade-loading": "Loading trader data...",
   "gui-trade-btn-directory": "Traders (K)",
@@ -40,7 +35,6 @@
   "gui-trade-balance-buy": "Buy ",
   "gui-trade-balance-sell": "Sell ",
   "gui-trade-balance-net": "Total: ",
-
   "tooltip-sell-untradeable": "Valuation: No value at this post.",
   "tooltip-sell-overstocked": "Valuation: Overstocked due to recent saturation.",
   "tooltip-sell-details": "Base value: {0} gears/u\nTrader affinity: x{1}\nDaily demand: x{2}\nCurrent saturation: x{3} (penalty {4}%)\nSlot rate: {5}u → {6} gears ({7})\n{8}",
@@ -55,7 +49,6 @@
   "tooltip-wanted-trade": "Required payout: {0} ({1})\nCurrent saturation: {2}%",
   "tooltip-inv-base-lot": "Estimated base value: {0}x → {1} gear(s)",
   "tooltip-inv-base-single": "Estimated base value: ~{0} gears",
-
   "gui-dir-title": "Global Directory of Known Traders",
   "gui-dir-header-refresh": "Refresh: ",
   "gui-dir-mode-live": "Live",
@@ -84,7 +77,6 @@
   "tooltip-dir-stock": "Stock: {0}",
   "tooltip-dir-out-of-stock": "OUT OF STOCK",
   "tooltip-dir-wanted": "Best reward: {0} ({1})\nSeen saturation: {2}%",
-
   "msg-trader-not-found": "Trader not found.",
   "msg-too-far": "You must move closer to the trader.",
   "msg-invalid-offer": "Invalid purchase offer.",
@@ -93,8 +85,6 @@
   "msg-player-not-enough-gears": "You need more gears (missing {0} gears).",
   "msg-trader-not-enough-gears": "The trader does not have enough gears ({0} gears).",
   "msg-trade-success": "Trade completed (Buy: {0} gears | Sell: +{1} gears).",
-  "msg-command-disabled": "Directory chat command is disabled or renamed in Traders Overhaul settings.",
-
   "config-section-economy": "Economy Mode and Directory",
   "config-economy-mode": "Economy mode",
   "config-economy-mode-comment": "Stingy (sell +25%, pay -25%); Balanced (100%); Businessmen (sell 100%, pay +20% on sales only)",
@@ -106,11 +96,6 @@
   "config-show-valuation-tooltip-comment": "Shows the estimated base value in the tooltip when hovering in your regular inventory",
   "config-enable-debug-logging": "In-game debug logs",
   "config-enable-debug-logging-comment": "Prints valuation, saturation, and rotation calculations to game chat and logs",
-  "config-enable-directory-command": "Enable directory chat command",
-  "config-enable-directory-command-comment": "Enables the client chat command to open the Global Trader Directory (in addition to the K hotkey)",
-  "config-directory-command-name": "Directory command name",
-  "config-directory-command-name-comment": "Custom command name without prefix (default: tradersoverhaul). New names apply live or on restart.",
-
   "config-section-saturation": "Anti-Farming Saturation",
   "config-saturation-scope": "Saturation scope",
   "config-saturation-scope-comment": "LocalOnly = that trader only; NearbyPartial = partially spreads to nearby traders; Global = worldwide",
@@ -126,7 +111,6 @@
   "config-saturation-min-floor-comment": "Minimum multiplier a saturated item can drop to (0.20 = 20%)",
   "config-saturation-recovery-per-day": "Daily recovery (GEV/day)",
   "config-saturation-recovery-per-day-comment": "Amount of saturation cleared per elapsed in-game day",
-
   "config-section-rules": "Reward and Trade Rules",
   "config-daily-demand-min-pct": "Minimum trader bonus (%)",
   "config-daily-demand-min-pct-comment": "Minimum extra reward percentage per trader on wanted items (20%)",

@@ -32,7 +32,6 @@ public sealed class ComerciantesModSystem : ModSystem, ITraderClientGateway
 
     private readonly Dictionary<string, InventoryGeneric> _serverSellInventories = new();
     private readonly Dictionary<string, long> _activeTraderSessions = new();
-    private readonly HashSet<string> _registeredDirectoryCommands = new(StringComparer.OrdinalIgnoreCase);
     private DateTime _lastConfigWriteUtc = DateTime.MinValue;
 
     private GuiDialogCustomTrader? _tradeDialog;
@@ -49,7 +48,6 @@ public sealed class ComerciantesModSystem : ModSystem, ITraderClientGateway
     {
         _side = api.Side;
         Config = api.LoadModConfig<ComerciantesConfig>(ConfigFileName) ?? new ComerciantesConfig();
-        Config.Normalize();
         api.StoreModConfig(Config, ConfigFileName);
         UpdateConfigTimestamp();
 
@@ -154,35 +152,6 @@ public sealed class ComerciantesModSystem : ModSystem, ITraderClientGateway
             OpenDirectoryFromClient();
             return true;
         });
-
-        EnsureDirectoryCommandRegistered(api);
-    }
-
-    private void EnsureDirectoryCommandRegistered(ICoreClientAPI? api)
-    {
-        if (api == null || !Config.EnableDirectoryCommand) return;
-
-        string cmdName = Config.GetEffectiveDirectoryCommandName();
-        if (!_registeredDirectoryCommands.Add(cmdName)) return;
-        if (api.ChatCommands.Get(cmdName) != null) return;
-
-        api.ChatCommands.Create(cmdName)
-            .WithDescription(ComerciantesLang.Get("cmd-directory-desc"))
-            .WithPreCondition(_ =>
-            {
-                if (Config.EnableDirectoryCommand
-                    && string.Equals(cmdName, Config.GetEffectiveDirectoryCommandName(), StringComparison.OrdinalIgnoreCase))
-                {
-                    return TextCommandResult.Success();
-                }
-
-                return TextCommandResult.Error(ComerciantesLang.Get("msg-command-disabled"));
-            })
-            .HandleWith(_ =>
-            {
-                OpenDirectoryFromClient();
-                return TextCommandResult.Success();
-            });
     }
 
     public void OpenDirectoryFromClient()
@@ -204,7 +173,6 @@ public sealed class ComerciantesModSystem : ModSystem, ITraderClientGateway
         ComerciantesConfig? loaded = api.LoadModConfig<ComerciantesConfig>(ConfigFileName);
         if (loaded != null)
         {
-            loaded.Normalize();
             Config = loaded;
         }
         UpdateConfigTimestamp();
@@ -279,11 +247,6 @@ public sealed class ComerciantesModSystem : ModSystem, ITraderClientGateway
         IAttribute? val = tree["value"];
         if (Config.ApplySetting(setting, val))
         {
-            if (string.Equals(setting, nameof(ComerciantesConfig.EnableDirectoryCommand), StringComparison.Ordinal)
-                || string.Equals(setting, nameof(ComerciantesConfig.DirectoryCommandName), StringComparison.Ordinal))
-            {
-                EnsureDirectoryCommandRegistered(_capi);
-            }
             DebugLogClient($"Ajuste aplicado en vivo: {setting}");
         }
     }
@@ -291,7 +254,6 @@ public sealed class ComerciantesModSystem : ModSystem, ITraderClientGateway
     private void OnClientConfigLibSaved(string eventName, ref EnumHandling handling, IAttribute data)
     {
         ReloadConfig(_capi);
-        EnsureDirectoryCommandRegistered(_capi);
         DebugLogClient("Configuracion recargada tras guardar en ConfigLib.");
     }
 

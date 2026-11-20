@@ -53,7 +53,7 @@ Todo mod debe tener completos y revisados los siguientes campos antes de publica
 - **Side** (`Client` / `Server` / `Universal`) & **Supported Game Versions**
 - **Category & Tags** (máx. 5–8 tags relevantes, p. ej. `QoL`, `Inventory`, `UI`, `Economy`, `Library`)
 - **Dependencies & Compatibility** (incluyendo enlaces reales a ModDB en reemplazo de placeholders como `#SERAPH_UI_MODDB_URL`)
-- **Configuration Channels** (`ModConfig/<modid>.json` / `ModConfig/<modid>-server.json` + **ConfigLib**; sin comandos propios de ajustes)
+- **Configuration Channels** (`ModConfig/<modid>.json` / `ModConfig/<modid>-server.json` + **ConfigLib**; sin comandos personalizados de chat)
 - **Media & Assets Status** (`modicon.png`, `icon.jpg`, `cover.jpg`, `screenshots/`)
 - **Release Checklist & Changelog**
 
@@ -75,6 +75,6 @@ Todo mod debe tener completos y revisados los siguientes campos antes de publica
 4. **Configuración limpia (ConfigLib + `.json`)**:
    - Persistir preferencias en `ModConfig/<modid>.json` (y `<modid>-server.json` si hay reglas autoritativas de servidor).
    - Proveer `configlib-patches.json` con traducciones completas en los 4 idiomas del monorepo (`en`, `es-es`, `es-419`, `ru`).
-   - Evitar comandos personalizados no soportados de forma estándar para edición en vivo.
+   - No implementar comandos personalizados de chat (usar atajos reconfigurables en Controles del juego y ConfigLib / `.json`).
 5. **Empaquetado y prueba aislada**:
    - Compilar en `Release` y verificar el contenido del `.zip` con `scripts/package-mods.ps1` (incluyendo prueba aislada con `-IsolateMods` antes de publicar una nueva versión).
