@@ -93,6 +93,7 @@
   "msg-player-not-enough-gears": "You need more gears (missing {0} gears).",
   "msg-trader-not-enough-gears": "The trader does not have enough gears ({0} gears).",
   "msg-trade-success": "Trade completed (Buy: {0} gears | Sell: +{1} gears).",
+  "msg-command-disabled": "Directory chat command is disabled or renamed in Traders Overhaul settings.",
 
   "config-section-economy": "Economy Mode and Directory",
   "config-economy-mode": "Economy mode",
@@ -105,6 +106,10 @@
   "config-show-valuation-tooltip-comment": "Shows the estimated base value in the tooltip when hovering in your regular inventory",
   "config-enable-debug-logging": "In-game debug logs",
   "config-enable-debug-logging-comment": "Prints valuation, saturation, and rotation calculations to game chat and logs",
+  "config-enable-directory-command": "Enable directory chat command",
+  "config-enable-directory-command-comment": "Enables the client chat command to open the Global Trader Directory (in addition to the K hotkey)",
+  "config-directory-command-name": "Directory command name",
+  "config-directory-command-name-comment": "Custom command name without prefix (default: tradersoverhaul). New names apply live or on restart.",
 
   "config-section-saturation": "Anti-Farming Saturation",
   "config-saturation-scope": "Saturation scope",

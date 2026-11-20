@@ -93,6 +93,7 @@
   "msg-player-not-enough-gears": "Не хватает шестерёнок (нужно {0} шест.).",
   "msg-trader-not-enough-gears": "У торговца недостаточно шестерёнок ({0} шест.).",
   "msg-trade-success": "Сделка завершена (Покупка: {0} шест. | Продажа: +{1} шест.).",
+  "msg-command-disabled": "Команда справочника отключена или переименована в настройках Traders Overhaul.",
 
   "config-section-economy": "Режим экономики и справочник",
   "config-economy-mode": "Режим экономики",
@@ -105,6 +106,10 @@
   "config-show-valuation-tooltip-comment": "Показывает ориентировочную базовую стоимость во всплывающей подсказке в обычном инвентаре",
   "config-enable-debug-logging": "Отладочные логи в игре",
   "config-enable-debug-logging-comment": "Выводит расчёты оценки, насыщения и ротации в чат и лог игры",
+  "config-enable-directory-command": "Включить команду справочника",
+  "config-enable-directory-command-comment": "Включает клиентскую команду чата для открытия глобального справочника торговцев (в дополнение к клавише K)",
+  "config-directory-command-name": "Имя команды справочника",
+  "config-directory-command-name-comment": "Пользовательское имя команды без префикса (по умолчанию: tradersoverhaul). Применяется сразу или после перезапуска.",
 
   "config-section-saturation": "Насыщение (анти-фарм)",
   "config-saturation-scope": "Область насыщения",

@@ -96,4 +96,23 @@ public sealed class ComerciantesConfigTests
         var enabled = new ComerciantesConfig { EnableInstantTrade = true, MaxPhysicalTradeDistance = 6.0 };
         Assert.True(enabled.IsWithinTradeDistance(5000.0));
     }
+
+    [Fact]
+    public void DirectoryCommand_DefaultsToTradersOverhaulAndNormalizesCustomNames()
+    {
+        var config = new ComerciantesConfig();
+        Assert.True(config.EnableDirectoryCommand);
+        Assert.Equal(ComerciantesConfig.DefaultDirectoryCommandName, config.DirectoryCommandName);
+        Assert.Equal("tradersoverhaul", config.GetEffectiveDirectoryCommandName());
+
+        Assert.Equal("traders", ComerciantesConfig.NormalizeDirectoryCommandName("/Traders "));
+        Assert.Equal("my_dir-2", ComerciantesConfig.NormalizeDirectoryCommandName(".My_Dir-2!"));
+        Assert.Equal("tradersoverhaul", ComerciantesConfig.NormalizeDirectoryCommandName("   /.. "));
+
+        Assert.True(config.ApplySetting(nameof(ComerciantesConfig.EnableDirectoryCommand), new BoolAttribute(false)));
+        Assert.False(config.EnableDirectoryCommand);
+
+        Assert.True(config.ApplySetting(nameof(ComerciantesConfig.DirectoryCommandName), new StringAttribute("/Mercado")));
+        Assert.Equal("mercado", config.DirectoryCommandName);
+    }
 }

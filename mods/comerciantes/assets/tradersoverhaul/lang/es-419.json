@@ -93,6 +93,7 @@
   "msg-player-not-enough-gears": "Te faltan engranajes (necesitas {0} eng.).",
   "msg-trader-not-enough-gears": "El comerciante no tiene suficientes engranajes ({0} eng.).",
   "msg-trade-success": "Intercambio completado (Compra: {0} eng. | Venta: +{1} eng.).",
+  "msg-command-disabled": "El comando de directorio está desactivado o renombrado en los ajustes de Traders Overhaul.",
 
   "config-section-economy": "Modo Económico y Directorio",
   "config-economy-mode": "Modo económico",
@@ -105,6 +106,10 @@
   "config-show-valuation-tooltip-comment": "Muestra el valor base estimado en el tooltip al pasar el cursor en tu inventario normal",
   "config-enable-debug-logging": "Logs de depuración en juego",
   "config-enable-debug-logging-comment": "Muestra cálculos de valoración, saturación y rotación en el chat y log del juego",
+  "config-enable-directory-command": "Activar comando de directorio",
+  "config-enable-directory-command-comment": "Habilita el comando de chat del cliente para abrir el Directorio Global de Comerciantes (además de la tecla K)",
+  "config-directory-command-name": "Nombre del comando de directorio",
+  "config-directory-command-name-comment": "Nombre personalizado del comando sin prefijo (por defecto: tradersoverhaul). Aplica en vivo o al reiniciar.",
 
   "config-section-saturation": "Saturación Anti-Farmeo",
   "config-saturation-scope": "Alcance de saturación",

@@ -8,7 +8,7 @@
   - `mods/seraph-qol/src/Config/WorldPolicyOverride.cs` -> `EffectiveServerPolicy.cs`
   - `mods/seraph-qol/assets/seraphqol/lang/*.json`
   - `tests/SeraphQoL.Tests/SeraphQoLConfigTests.cs`
-  - `docs/moddb/seraphqol-description.html`
+  - `mods/seraph-qol/publisher/description.html` (antes `docs/moddb/seraphqol-description.html`)
 
 ## Objetivo y Alcance
 Eliminar la interfaz de ajustes activada con `Alt + O` (`GuiDialogSeraphQoLSettings`), el comando de chat `/seraphqol` y los overrides por mundo `/worldconfig seraphqol:*` (`WorldPolicyOverride`), manteniendo la configuración del mod reservada exclusivamente a **ConfigLib** y archivos `.json` (`ModConfig/seraphqol.json` y `ModConfig/seraphqol-server.json`), sin dejar código, claves de idioma ni pruebas muertas.

@@ -63,6 +63,26 @@
       "weight": 0.4
     },
     {
+      "code": "EnableDirectoryCommand",
+      "name": "EnableDirectoryCommand",
+      "ingui": "tradersoverhaul:config-enable-directory-command",
+      "comment": "tradersoverhaul:config-enable-directory-command-comment",
+      "type": "boolean",
+      "default": true,
+      "clientSide": true,
+      "weight": 0.45
+    },
+    {
+      "code": "DirectoryCommandName",
+      "name": "DirectoryCommandName",
+      "ingui": "tradersoverhaul:config-directory-command-name",
+      "comment": "tradersoverhaul:config-directory-command-name-comment",
+      "type": "string",
+      "default": "tradersoverhaul",
+      "clientSide": true,
+      "weight": 0.5
+    },
+    {
       "type": "separator",
       "title": "tradersoverhaul:config-section-saturation",
       "weight": 1.0
