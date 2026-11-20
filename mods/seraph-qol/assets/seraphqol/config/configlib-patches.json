@@ -659,6 +659,27 @@
       "weight": 9.9
     },
     {
+      "code": "HealthBarAlwaysShow",
+      "name": "HealthBarAlwaysShow",
+      "ingui": "seraphqol:config-healthbar-always-show",
+      "comment": "seraphqol:config-healthbar-always-show-comment",
+      "type": "boolean",
+      "default": false,
+      "clientSide": true,
+      "weight": 9.91
+    },
+    {
+      "code": "HealthBarLingerSeconds",
+      "name": "HealthBarLingerSeconds",
+      "ingui": "seraphqol:config-healthbar-linger-seconds",
+      "comment": "seraphqol:config-healthbar-linger-seconds-comment",
+      "type": "float",
+      "default": 2.5,
+      "range": { "min": 0.0, "max": 30.0, "step": 0.5 },
+      "clientSide": true,
+      "weight": 9.92
+    },
+    {
       "code": "HealthBarRange",
       "name": "HealthBarRange",
       "ingui": "seraphqol:config-healthbar-range",
@@ -858,6 +879,136 @@
       "type": "boolean",
       "default": true,
       "weight": 11.35
+    },
+
+    {
+      "type": "separator",
+      "title": "seraphqol:config-section-stack-sizes",
+      "weight": 12.0
+    },
+    {
+      "code": "StackSizePreset",
+      "name": "StackSizePreset",
+      "ingui": "seraphqol:config-stack-size-preset",
+      "comment": "seraphqol:config-stack-size-preset-comment",
+      "type": "string",
+      "default": "Vanilla",
+      "values": [
+        "Vanilla",
+        "P1nksBalanced",
+        "Double2x",
+        "Builder4x",
+        "Custom"
+      ],
+      "weight": 12.05
+    },
+    {
+      "code": "EnableStackSizeModifier",
+      "name": "EnableStackSizeModifier",
+      "ingui": "seraphqol:config-enable-stack-size-modifier",
+      "comment": "seraphqol:config-enable-stack-size-modifier-comment",
+      "type": "boolean",
+      "default": false,
+      "weight": 12.1
+    },
+    {
+      "code": "GlobalStackMultiplier",
+      "name": "GlobalStackMultiplier",
+      "ingui": "seraphqol:config-global-stack-multiplier",
+      "comment": "seraphqol:config-global-stack-multiplier-comment",
+      "type": "float",
+      "default": 1.0,
+      "range": { "min": 0.25, "max": 16.0, "step": 0.25 },
+      "weight": 12.15
+    },
+    {
+      "code": "BuildingBlocksStackMultiplier",
+      "name": "BuildingBlocksStackMultiplier",
+      "ingui": "seraphqol:config-building-blocks-stack-mult",
+      "comment": "seraphqol:config-building-blocks-stack-mult-comment",
+      "type": "float",
+      "default": 1.0,
+      "range": { "min": 0.25, "max": 16.0, "step": 0.25 },
+      "weight": 12.2
+    },
+    {
+      "code": "ResourcesStackMultiplier",
+      "name": "ResourcesStackMultiplier",
+      "ingui": "seraphqol:config-resources-stack-mult",
+      "comment": "seraphqol:config-resources-stack-mult-comment",
+      "type": "float",
+      "default": 1.0,
+      "range": { "min": 0.25, "max": 16.0, "step": 0.25 },
+      "weight": 12.25
+    },
+    {
+      "code": "FoodStackMultiplier",
+      "name": "FoodStackMultiplier",
+      "ingui": "seraphqol:config-food-stack-mult",
+      "comment": "seraphqol:config-food-stack-mult-comment",
+      "type": "float",
+      "default": 1.0,
+      "range": { "min": 0.25, "max": 16.0, "step": 0.25 },
+      "weight": 12.3
+    },
+    {
+      "code": "MiscStackMultiplier",
+      "name": "MiscStackMultiplier",
+      "ingui": "seraphqol:config-misc-stack-mult",
+      "comment": "seraphqol:config-misc-stack-mult-comment",
+      "type": "float",
+      "default": 1.0,
+      "range": { "min": 0.25, "max": 16.0, "step": 0.25 },
+      "weight": 12.35
+    },
+    {
+      "code": "AllowUnstackableContainersAndFurniture",
+      "name": "AllowUnstackableContainersAndFurniture",
+      "ingui": "seraphqol:config-allow-unstackable-containers",
+      "comment": "seraphqol:config-allow-unstackable-containers-comment",
+      "type": "boolean",
+      "default": false,
+      "weight": 12.4
+    },
+    {
+      "code": "EmptyContainersMaxStack",
+      "name": "EmptyContainersMaxStack",
+      "ingui": "seraphqol:config-empty-containers-max-stack",
+      "comment": "seraphqol:config-empty-containers-max-stack-comment",
+      "type": "integer",
+      "default": 1,
+      "range": { "min": 1, "max": 256, "step": 1 },
+      "weight": 12.45
+    },
+    {
+      "code": "FurnitureUtilityMaxStack",
+      "name": "FurnitureUtilityMaxStack",
+      "ingui": "seraphqol:config-furniture-utility-max-stack",
+      "comment": "seraphqol:config-furniture-utility-max-stack-comment",
+      "type": "integer",
+      "default": 1,
+      "range": { "min": 1, "max": 256, "step": 1 },
+      "weight": 12.5
+    },
+    {
+      "code": "ClothingMaxStack",
+      "name": "ClothingMaxStack",
+      "ingui": "seraphqol:config-clothing-max-stack",
+      "comment": "seraphqol:config-clothing-max-stack-comment",
+      "type": "integer",
+      "default": 1,
+      "range": { "min": 1, "max": 256, "step": 1 },
+      "weight": 12.55
+    },
+    {
+      "code": "MaxStackSizeCap",
+      "name": "MaxStackSizeCap",
+      "ingui": "seraphqol:config-max-stack-size-cap",
+      "comment": "seraphqol:config-max-stack-size-cap-comment",
+      "type": "integer",
+      "default": 512,
+      "range": { "min": 16, "max": 20000, "step": 16 },
+      "weight": 12.6
     }
   ]
 }

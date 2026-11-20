@@ -1,3 +1,5 @@
+using Newtonsoft.Json;
+using Newtonsoft.Json.Converters;
 using Vintagestory.API.Datastructures;
 
 namespace SeraphQoL.Config;
@@ -16,16 +18,35 @@ public enum FaunaPreset
 }
 
 /// <summary>
-/// Configuracion autoritativa del servidor para Fauna QoL y politicas de inventario/contenedores.
+/// Presets (prefabs) predefinidos para modificacion de tamano de stack en ConfigLib.
+/// </summary>
+public enum StackSizePreset
+{
+    Vanilla,
+    P1nksBalanced,
+    Double2x,
+    Builder4x,
+    Custom
+}
+
+/// <summary>
+/// Configuracion autoritativa del servidor para Fauna QoL, tamanos de stack y politicas de inventario/contenedores.
 /// </summary>
 public sealed class SeraphQoLServerConfig
 {
     public const double MinMultiplier = 0.1;
     public const double MaxMultiplier = 20.0;
+    public const double MinStackMultiplier = 0.25;
+    public const double MaxStackMultiplier = 16.0;
+    public const int MinSingleItemMaxStack = 1;
+    public const int MaxSingleItemMaxStack = 256;
+    public const int MinStackSizeCapValue = 16;
+    public const int MaxStackSizeCapValue = 20000;
     public const int MinStoreNearbyRadius = 1;
     public const int MaxStoreNearbyRadius = 16;
 
     // Fauna QoL (Balanceado tactico por defecto)
+    [JsonConverter(typeof(StringEnumConverter))]
     public FaunaPreset FaunaPreset { get; set; } = FaunaPreset.BalancedTactical;
     public bool EnableFaunaRebalance { get; set; } = true;
     public double SmallPreyHealthMultiplier { get; set; } = 1.5;
@@ -56,6 +77,24 @@ public sealed class SeraphQoLServerConfig
 
     public HashSet<string> AdditionalContainerWhitelist { get; set; } = new(StringComparer.OrdinalIgnoreCase);
     public HashSet<string> ContainerBlacklist { get; set; } = new(StringComparer.OrdinalIgnoreCase);
+
+    // Tamanos de Stack (Server Authoritative)
+    [JsonConverter(typeof(StringEnumConverter))]
+    public StackSizePreset StackSizePreset { get; set; } = StackSizePreset.Vanilla;
+    public bool EnableStackSizeModifier { get; set; } = false;
+    public double GlobalStackMultiplier { get; set; } = 1.0;
+    public double BuildingBlocksStackMultiplier { get; set; } = 1.0;
+    public double ResourcesStackMultiplier { get; set; } = 1.0;
+    public double FoodStackMultiplier { get; set; } = 1.0;
+    public double MiscStackMultiplier { get; set; } = 1.0;
+    public bool AllowUnstackableContainersAndFurniture { get; set; } = false;
+    public int EmptyContainersMaxStack { get; set; } = 1;
+    public int FurnitureUtilityMaxStack { get; set; } = 1;
+    public int ClothingMaxStack { get; set; } = 1;
+    public int MaxStackSizeCap { get; set; } = 512;
+
+    public HashSet<string> StackSizeBlacklist { get; set; } = new(StringComparer.OrdinalIgnoreCase);
+    public Dictionary<string, int> StackSizeOverrides { get; set; } = new(StringComparer.OrdinalIgnoreCase);
 
     public bool ApplyPreset(FaunaPreset preset)
     {
@@ -162,6 +201,140 @@ public sealed class SeraphQoLServerConfig
         return FaunaPreset.Custom;
     }
 
+    public bool ApplyStackPreset(StackSizePreset preset)
+    {
+        StackSizePreset = preset;
+        switch (preset)
+        {
+            case StackSizePreset.Vanilla:
+                EnableStackSizeModifier = false;
+                GlobalStackMultiplier = 1.0;
+                BuildingBlocksStackMultiplier = 1.0;
+                ResourcesStackMultiplier = 1.0;
+                FoodStackMultiplier = 1.0;
+                MiscStackMultiplier = 1.0;
+                AllowUnstackableContainersAndFurniture = false;
+                EmptyContainersMaxStack = 1;
+                FurnitureUtilityMaxStack = 1;
+                ClothingMaxStack = 1;
+                MaxStackSizeCap = 512;
+                return true;
+
+            case StackSizePreset.P1nksBalanced:
+                EnableStackSizeModifier = true;
+                GlobalStackMultiplier = 1.0;
+                BuildingBlocksStackMultiplier = 2.0;
+                ResourcesStackMultiplier = 2.0;
+                FoodStackMultiplier = 2.0;
+                MiscStackMultiplier = 2.0;
+                AllowUnstackableContainersAndFurniture = true;
+                EmptyContainersMaxStack = 8;
+                FurnitureUtilityMaxStack = 16;
+                ClothingMaxStack = 16;
+                MaxStackSizeCap = 256;
+                return true;
+
+            case StackSizePreset.Double2x:
+                EnableStackSizeModifier = true;
+                GlobalStackMultiplier = 2.0;
+                BuildingBlocksStackMultiplier = 1.0;
+                ResourcesStackMultiplier = 1.0;
+                FoodStackMultiplier = 1.0;
+                MiscStackMultiplier = 1.0;
+                AllowUnstackableContainersAndFurniture = true;
+                EmptyContainersMaxStack = 8;
+                FurnitureUtilityMaxStack = 16;
+                ClothingMaxStack = 8;
+                MaxStackSizeCap = 512;
+                return true;
+
+            case StackSizePreset.Builder4x:
+                EnableStackSizeModifier = true;
+                GlobalStackMultiplier = 1.0;
+                BuildingBlocksStackMultiplier = 4.0;
+                ResourcesStackMultiplier = 4.0;
+                FoodStackMultiplier = 2.0;
+                MiscStackMultiplier = 2.0;
+                AllowUnstackableContainersAndFurniture = true;
+                EmptyContainersMaxStack = 16;
+                FurnitureUtilityMaxStack = 64;
+                ClothingMaxStack = 16;
+                MaxStackSizeCap = 1024;
+                return true;
+
+            case StackSizePreset.Custom:
+                return true;
+
+            default:
+                return false;
+        }
+    }
+
+    public StackSizePreset DetectMatchingStackPreset()
+    {
+        foreach (StackSizePreset candidate in new[]
+        {
+            StackSizePreset.Vanilla,
+            StackSizePreset.P1nksBalanced,
+            StackSizePreset.Double2x,
+            StackSizePreset.Builder4x
+        })
+        {
+            var probe = new SeraphQoLServerConfig();
+            probe.ApplyStackPreset(candidate);
+            if (MatchesStackValues(probe))
+            {
+                return candidate;
+            }
+        }
+
+        return StackSizePreset.Custom;
+    }
+
+    public IReadOnlyList<(string Key, object Value)> GetFaunaPresetEntries(bool includePresetKey = false)
+    {
+        var list = new List<(string Key, object Value)>(12);
+        if (includePresetKey)
+        {
+            list.Add((nameof(FaunaPreset), FaunaPreset.ToString()));
+        }
+
+        list.Add((nameof(EnableFaunaRebalance), EnableFaunaRebalance));
+        list.Add((nameof(SmallPreyHealthMultiplier), (float)SmallPreyHealthMultiplier));
+        list.Add((nameof(MediumLargePreyHealthMultiplier), (float)MediumLargePreyHealthMultiplier));
+        list.Add((nameof(PredatorHealthMultiplier), (float)PredatorHealthMultiplier));
+        list.Add((nameof(MeatDropMultiplier), (float)MeatDropMultiplier));
+        list.Add((nameof(FatDropMultiplier), (float)FatDropMultiplier));
+        list.Add((nameof(HideDropMultiplier), (float)HideDropMultiplier));
+        list.Add((nameof(ByproductDropMultiplier), (float)ByproductDropMultiplier));
+        list.Add((nameof(ScaleDomesticatedHealth), ScaleDomesticatedHealth));
+        list.Add((nameof(ScaleDomesticatedDrops), ScaleDomesticatedDrops));
+        list.Add((nameof(IncludeAquaticFauna), IncludeAquaticFauna));
+        return list;
+    }
+
+    public IReadOnlyList<(string Key, object Value)> GetStackPresetEntries(bool includePresetKey = false)
+    {
+        var list = new List<(string Key, object Value)>(12);
+        if (includePresetKey)
+        {
+            list.Add((nameof(StackSizePreset), StackSizePreset.ToString()));
+        }
+
+        list.Add((nameof(EnableStackSizeModifier), EnableStackSizeModifier));
+        list.Add((nameof(GlobalStackMultiplier), (float)GlobalStackMultiplier));
+        list.Add((nameof(BuildingBlocksStackMultiplier), (float)BuildingBlocksStackMultiplier));
+        list.Add((nameof(ResourcesStackMultiplier), (float)ResourcesStackMultiplier));
+        list.Add((nameof(FoodStackMultiplier), (float)FoodStackMultiplier));
+        list.Add((nameof(MiscStackMultiplier), (float)MiscStackMultiplier));
+        list.Add((nameof(AllowUnstackableContainersAndFurniture), AllowUnstackableContainersAndFurniture));
+        list.Add((nameof(EmptyContainersMaxStack), EmptyContainersMaxStack));
+        list.Add((nameof(FurnitureUtilityMaxStack), FurnitureUtilityMaxStack));
+        list.Add((nameof(ClothingMaxStack), ClothingMaxStack));
+        list.Add((nameof(MaxStackSizeCap), MaxStackSizeCap));
+        return list;
+    }
+
     public void SyncConfigSettingsFrom(SeraphQoLServerConfig source)
     {
         FaunaPreset = source.FaunaPreset;
@@ -182,6 +355,18 @@ public sealed class SeraphQoLServerConfig
         RequireLandClaimPermission = source.RequireLandClaimPermission;
         AllowHotbarRefill = source.AllowHotbarRefill;
         AllowProjectileTracker = source.AllowProjectileTracker;
+        StackSizePreset = source.StackSizePreset;
+        EnableStackSizeModifier = source.EnableStackSizeModifier;
+        GlobalStackMultiplier = source.GlobalStackMultiplier;
+        BuildingBlocksStackMultiplier = source.BuildingBlocksStackMultiplier;
+        ResourcesStackMultiplier = source.ResourcesStackMultiplier;
+        FoodStackMultiplier = source.FoodStackMultiplier;
+        MiscStackMultiplier = source.MiscStackMultiplier;
+        AllowUnstackableContainersAndFurniture = source.AllowUnstackableContainersAndFurniture;
+        EmptyContainersMaxStack = source.EmptyContainersMaxStack;
+        FurnitureUtilityMaxStack = source.FurnitureUtilityMaxStack;
+        ClothingMaxStack = source.ClothingMaxStack;
+        MaxStackSizeCap = source.MaxStackSizeCap;
         Normalize();
     }
 
@@ -195,6 +380,16 @@ public sealed class SeraphQoLServerConfig
         HideDropMultiplier = ClampMultiplier(HideDropMultiplier);
         ByproductDropMultiplier = ClampMultiplier(ByproductDropMultiplier);
         StoreNearbyRadius = Math.Clamp(StoreNearbyRadius, MinStoreNearbyRadius, MaxStoreNearbyRadius);
+
+        GlobalStackMultiplier = ClampStackMultiplier(GlobalStackMultiplier);
+        BuildingBlocksStackMultiplier = ClampStackMultiplier(BuildingBlocksStackMultiplier);
+        ResourcesStackMultiplier = ClampStackMultiplier(ResourcesStackMultiplier);
+        FoodStackMultiplier = ClampStackMultiplier(FoodStackMultiplier);
+        MiscStackMultiplier = ClampStackMultiplier(MiscStackMultiplier);
+        EmptyContainersMaxStack = Math.Clamp(EmptyContainersMaxStack, MinSingleItemMaxStack, MaxSingleItemMaxStack);
+        FurnitureUtilityMaxStack = Math.Clamp(FurnitureUtilityMaxStack, MinSingleItemMaxStack, MaxSingleItemMaxStack);
+        ClothingMaxStack = Math.Clamp(ClothingMaxStack, MinSingleItemMaxStack, MaxSingleItemMaxStack);
+        MaxStackSizeCap = Math.Clamp(MaxStackSizeCap, MinStackSizeCapValue, MaxStackSizeCapValue);
     }
 
     public bool ApplySetting(string? code, IAttribute? valueAttr)
@@ -214,26 +409,49 @@ public sealed class SeraphQoLServerConfig
             return parsed;
         }
 
+        if (string.Equals(code, nameof(StackSizePreset), StringComparison.Ordinal))
+        {
+            bool parsed = ConfigValueParser.TryEnum<StackSizePreset>(raw, v =>
+            {
+                if (v == StackSizePreset.Custom) StackSizePreset = StackSizePreset.Custom;
+                else ApplyStackPreset(v);
+            });
+            if (parsed) Normalize();
+            return parsed;
+        }
+
         bool isFaunaProperty = false;
+        bool isStackProperty = false;
         bool applied = code switch
         {
-            nameof(EnableFaunaRebalance) => MarkFauna(ConfigValueParser.TryBool(raw, v => EnableFaunaRebalance = v), ref isFaunaProperty),
-            nameof(SmallPreyHealthMultiplier) => MarkFauna(ConfigValueParser.TryDouble(raw, v => SmallPreyHealthMultiplier = v), ref isFaunaProperty),
-            nameof(MediumLargePreyHealthMultiplier) => MarkFauna(ConfigValueParser.TryDouble(raw, v => MediumLargePreyHealthMultiplier = v), ref isFaunaProperty),
-            nameof(PredatorHealthMultiplier) => MarkFauna(ConfigValueParser.TryDouble(raw, v => PredatorHealthMultiplier = v), ref isFaunaProperty),
-            nameof(MeatDropMultiplier) => MarkFauna(ConfigValueParser.TryDouble(raw, v => MeatDropMultiplier = v), ref isFaunaProperty),
-            nameof(FatDropMultiplier) => MarkFauna(ConfigValueParser.TryDouble(raw, v => FatDropMultiplier = v), ref isFaunaProperty),
-            nameof(HideDropMultiplier) => MarkFauna(ConfigValueParser.TryDouble(raw, v => HideDropMultiplier = v), ref isFaunaProperty),
-            nameof(ByproductDropMultiplier) => MarkFauna(ConfigValueParser.TryDouble(raw, v => ByproductDropMultiplier = v), ref isFaunaProperty),
-            nameof(ScaleDomesticatedHealth) => MarkFauna(ConfigValueParser.TryBool(raw, v => ScaleDomesticatedHealth = v), ref isFaunaProperty),
-            nameof(ScaleDomesticatedDrops) => MarkFauna(ConfigValueParser.TryBool(raw, v => ScaleDomesticatedDrops = v), ref isFaunaProperty),
-            nameof(IncludeAquaticFauna) => MarkFauna(ConfigValueParser.TryBool(raw, v => IncludeAquaticFauna = v), ref isFaunaProperty),
+            nameof(EnableFaunaRebalance) => MarkGroup(ConfigValueParser.TryBool(raw, v => EnableFaunaRebalance = v), ref isFaunaProperty),
+            nameof(SmallPreyHealthMultiplier) => MarkGroup(ConfigValueParser.TryDouble(raw, v => SmallPreyHealthMultiplier = v), ref isFaunaProperty),
+            nameof(MediumLargePreyHealthMultiplier) => MarkGroup(ConfigValueParser.TryDouble(raw, v => MediumLargePreyHealthMultiplier = v), ref isFaunaProperty),
+            nameof(PredatorHealthMultiplier) => MarkGroup(ConfigValueParser.TryDouble(raw, v => PredatorHealthMultiplier = v), ref isFaunaProperty),
+            nameof(MeatDropMultiplier) => MarkGroup(ConfigValueParser.TryDouble(raw, v => MeatDropMultiplier = v), ref isFaunaProperty),
+            nameof(FatDropMultiplier) => MarkGroup(ConfigValueParser.TryDouble(raw, v => FatDropMultiplier = v), ref isFaunaProperty),
+            nameof(HideDropMultiplier) => MarkGroup(ConfigValueParser.TryDouble(raw, v => HideDropMultiplier = v), ref isFaunaProperty),
+            nameof(ByproductDropMultiplier) => MarkGroup(ConfigValueParser.TryDouble(raw, v => ByproductDropMultiplier = v), ref isFaunaProperty),
+            nameof(ScaleDomesticatedHealth) => MarkGroup(ConfigValueParser.TryBool(raw, v => ScaleDomesticatedHealth = v), ref isFaunaProperty),
+            nameof(ScaleDomesticatedDrops) => MarkGroup(ConfigValueParser.TryBool(raw, v => ScaleDomesticatedDrops = v), ref isFaunaProperty),
+            nameof(IncludeAquaticFauna) => MarkGroup(ConfigValueParser.TryBool(raw, v => IncludeAquaticFauna = v), ref isFaunaProperty),
             nameof(EnableInventoryManagement) => ConfigValueParser.TryBool(raw, v => EnableInventoryManagement = v),
             nameof(EnableStoreNearby) => ConfigValueParser.TryBool(raw, v => EnableStoreNearby = v),
             nameof(StoreNearbyRadius) => ConfigValueParser.TryInt(raw, v => StoreNearbyRadius = v),
             nameof(RequireLandClaimPermission) => ConfigValueParser.TryBool(raw, v => RequireLandClaimPermission = v),
             nameof(AllowHotbarRefill) => ConfigValueParser.TryBool(raw, v => AllowHotbarRefill = v),
             nameof(AllowProjectileTracker) => ConfigValueParser.TryBool(raw, v => AllowProjectileTracker = v),
+            nameof(EnableStackSizeModifier) => MarkGroup(ConfigValueParser.TryBool(raw, v => EnableStackSizeModifier = v), ref isStackProperty),
+            nameof(GlobalStackMultiplier) => MarkGroup(ConfigValueParser.TryDouble(raw, v => GlobalStackMultiplier = v), ref isStackProperty),
+            nameof(BuildingBlocksStackMultiplier) => MarkGroup(ConfigValueParser.TryDouble(raw, v => BuildingBlocksStackMultiplier = v), ref isStackProperty),
+            nameof(ResourcesStackMultiplier) => MarkGroup(ConfigValueParser.TryDouble(raw, v => ResourcesStackMultiplier = v), ref isStackProperty),
+            nameof(FoodStackMultiplier) => MarkGroup(ConfigValueParser.TryDouble(raw, v => FoodStackMultiplier = v), ref isStackProperty),
+            nameof(MiscStackMultiplier) => MarkGroup(ConfigValueParser.TryDouble(raw, v => MiscStackMultiplier = v), ref isStackProperty),
+            nameof(AllowUnstackableContainersAndFurniture) => MarkGroup(ConfigValueParser.TryBool(raw, v => AllowUnstackableContainersAndFurniture = v), ref isStackProperty),
+            nameof(EmptyContainersMaxStack) => MarkGroup(ConfigValueParser.TryInt(raw, v => EmptyContainersMaxStack = v), ref isStackProperty),
+            nameof(FurnitureUtilityMaxStack) => MarkGroup(ConfigValueParser.TryInt(raw, v => FurnitureUtilityMaxStack = v), ref isStackProperty),
+            nameof(ClothingMaxStack) => MarkGroup(ConfigValueParser.TryInt(raw, v => ClothingMaxStack = v), ref isStackProperty),
+            nameof(MaxStackSizeCap) => MarkGroup(ConfigValueParser.TryInt(raw, v => MaxStackSizeCap = v), ref isStackProperty),
             _ => false
         };
 
@@ -243,6 +461,10 @@ public sealed class SeraphQoLServerConfig
             if (isFaunaProperty)
             {
                 FaunaPreset = DetectMatchingPreset();
+            }
+            if (isStackProperty)
+            {
+                StackSizePreset = DetectMatchingStackPreset();
             }
         }
 
@@ -262,11 +484,24 @@ public sealed class SeraphQoLServerConfig
         && ScaleDomesticatedDrops == other.ScaleDomesticatedDrops
         && IncludeAquaticFauna == other.IncludeAquaticFauna;
 
+    private bool MatchesStackValues(SeraphQoLServerConfig other) =>
+        EnableStackSizeModifier == other.EnableStackSizeModifier
+        && ApproxEqual(GlobalStackMultiplier, other.GlobalStackMultiplier)
+        && ApproxEqual(BuildingBlocksStackMultiplier, other.BuildingBlocksStackMultiplier)
+        && ApproxEqual(ResourcesStackMultiplier, other.ResourcesStackMultiplier)
+        && ApproxEqual(FoodStackMultiplier, other.FoodStackMultiplier)
+        && ApproxEqual(MiscStackMultiplier, other.MiscStackMultiplier)
+        && AllowUnstackableContainersAndFurniture == other.AllowUnstackableContainersAndFurniture
+        && EmptyContainersMaxStack == other.EmptyContainersMaxStack
+        && FurnitureUtilityMaxStack == other.FurnitureUtilityMaxStack
+        && ClothingMaxStack == other.ClothingMaxStack
+        && MaxStackSizeCap == other.MaxStackSizeCap;
+
     private static bool ApproxEqual(double a, double b) => Math.Abs(a - b) < 0.001;
 
-    private static bool MarkFauna(bool result, ref bool isFaunaProperty)
+    private static bool MarkGroup(bool result, ref bool groupFlag)
     {
-        isFaunaProperty = result;
+        groupFlag = result;
         return result;
     }
 
@@ -274,4 +509,9 @@ public sealed class SeraphQoLServerConfig
         double.IsNaN(value) || double.IsInfinity(value)
             ? 1.0
             : Math.Clamp(value, MinMultiplier, MaxMultiplier);
+
+    private static double ClampStackMultiplier(double value) =>
+        double.IsNaN(value) || double.IsInfinity(value)
+            ? 1.0
+            : Math.Clamp(value, MinStackMultiplier, MaxStackMultiplier);
 }

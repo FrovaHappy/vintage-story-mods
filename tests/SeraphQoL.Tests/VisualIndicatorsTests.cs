@@ -200,4 +200,36 @@ public sealed class VisualIndicatorsTests
         Assert.Equal("12/20", EntityHudClassifier.FormatHealthText(12f, 20f));
         Assert.Equal("0.4/20", EntityHudClassifier.FormatHealthText(0.4f, 20f));
     }
+
+    [Fact]
+    public void EntityHealthBarVisibilityState_RespectsLookAtAndLingerDelayAndAlwaysShowOption()
+    {
+        var state = new EntityHealthBarVisibilityState();
+
+        // By default (alwaysShow = false), unlooked entities are hidden
+        Assert.False(state.IsEntityVisible(entityId: 10, lookedAtEntityId: null, alwaysShow: false, nowMs: 1000, lingerSeconds: 2.5));
+
+        // Looking at entity 10 makes it visible
+        Assert.True(state.IsEntityVisible(entityId: 10, lookedAtEntityId: 10, alwaysShow: false, nowMs: 1000, lingerSeconds: 2.5));
+
+        // After looking away, stays visible during the 2.5s (2500ms) linger window
+        Assert.True(state.IsEntityVisible(entityId: 10, lookedAtEntityId: 20, alwaysShow: false, nowMs: 3499, lingerSeconds: 2.5));
+        // Looking at entity 20 shows entity 20 immediately too
+        Assert.True(state.IsEntityVisible(entityId: 20, lookedAtEntityId: 20, alwaysShow: false, nowMs: 3499, lingerSeconds: 2.5));
+
+        // At exactly 1000 + 2500 = 3500ms, entity 10 expires while entity 20 lingers
+        Assert.False(state.IsEntityVisible(entityId: 10, lookedAtEntityId: null, alwaysShow: false, nowMs: 3500, lingerSeconds: 2.5));
+        Assert.True(state.IsEntityVisible(entityId: 20, lookedAtEntityId: null, alwaysShow: false, nowMs: 5998, lingerSeconds: 2.5));
+        Assert.False(state.IsEntityVisible(entityId: 20, lookedAtEntityId: null, alwaysShow: false, nowMs: 5999, lingerSeconds: 2.5));
+
+        // Zero linger hides immediately once not looked at
+        Assert.True(state.IsEntityVisible(entityId: 30, lookedAtEntityId: 30, alwaysShow: false, nowMs: 7000, lingerSeconds: 0.0));
+        Assert.False(state.IsEntityVisible(entityId: 30, lookedAtEntityId: null, alwaysShow: false, nowMs: 7001, lingerSeconds: 0.0));
+
+        // AlwaysShow bypasses look-at requirement
+        Assert.True(state.IsEntityVisible(entityId: 99, lookedAtEntityId: null, alwaysShow: true, nowMs: 8000, lingerSeconds: 2.5));
+
+        state.Reset();
+        Assert.False(state.IsEntityVisible(entityId: 20, lookedAtEntityId: null, alwaysShow: false, nowMs: 4000, lingerSeconds: 2.5));
+    }
 }

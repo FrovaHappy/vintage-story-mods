@@ -10,6 +10,7 @@ using SeraphQoL.Interaction;
 using SeraphQoL.Inventory;
 using SeraphQoL.Network;
 using SeraphQoL.Patches;
+using SeraphQoL.StackSizes;
 using SeraphQoL.Visuals;
 using Vintagestory.API.Client;
 using Vintagestory.API.Common;
@@ -42,6 +43,7 @@ public sealed class SeraphQoLModSystem : ModSystem
     private IClientNetworkChannel? _clientChannel;
 
     private readonly FaunaAssetsService _faunaService = new();
+    private readonly StackSizeAssetsService _stackSizeService = new();
     private ServerInventoryExecutor? _inventoryExecutor;
     private ProjectileTrackerServer? _projectileTrackerServer;
     private ProjectileTrackerClient? _projectileTrackerClient;
@@ -109,10 +111,12 @@ public sealed class SeraphQoLModSystem : ModSystem
         {
             RefreshEffectivePolicy();
             _faunaService.ApplyToEntityTypes(sapi, EffectivePolicy);
+            _stackSizeService.ApplyToCollectibles(sapi, EffectivePolicy);
         }
-        else if (api is ICoreClientAPI)
+        else if (api is ICoreClientAPI capi)
         {
             _resourceParticlesService?.ApplyConfiguredParticles();
+            _stackSizeService.ApplyToCollectibles(capi, EffectivePolicy);
         }
     }
 
@@ -219,6 +223,7 @@ public sealed class SeraphQoLModSystem : ModSystem
             _alloyCalculatorDialog?.TryClose();
             _alloyDepositService?.ClearScanCache();
             _slotIndicatorRenderer?.ClearCache();
+            _animalSexRenderer?.Reset();
             _groundHighlightRenderer?.Reset();
             _projectileTrackerClient?.ClearAll();
         };
@@ -562,6 +567,10 @@ public sealed class SeraphQoLModSystem : ModSystem
     private void OnClientServerPolicySync(ServerPolicySyncPacket packet)
     {
         EffectivePolicy = packet.ToDisplayPolicy();
+        if (_capi != null)
+        {
+            _stackSizeService.ApplyToCollectibles(_capi, EffectivePolicy);
+        }
     }
 
     private void OnClientRemeshContainers(RemeshContainersPacket packet)
@@ -677,7 +686,7 @@ public sealed class SeraphQoLModSystem : ModSystem
 
     private void OnClientConfigLibSettingChanged(string eventName, ref EnumHandling handling, IAttribute data)
     {
-        if (_suppressConfigLibEvents || data is not ITreeAttribute tree) return;
+        if (_suppressConfigLibEvents || _capi == null || data is not ITreeAttribute tree) return;
 
         string? setting = tree.GetString("setting");
         IAttribute? val = tree["value"];
@@ -685,12 +694,57 @@ public sealed class SeraphQoLModSystem : ModSystem
         if (string.Equals(setting, nameof(SeraphQoLServerConfig.FaunaPreset), StringComparison.Ordinal)
             && val?.GetValue() is { } rawPreset
             && ConfigValueParser.TryEnum<FaunaPreset>(rawPreset, out FaunaPreset preset)
-            && preset != FaunaPreset.Custom
-            && _capi != null)
+            && preset != FaunaPreset.Custom)
         {
             var preview = new SeraphQoLServerConfig();
             preview.ApplyPreset(preset);
-            TryPushServerFaunaToConfigLib(_capi, preview);
+            TryPushServerFaunaToConfigLib(_capi, preview, persistJson: true);
+        }
+        else if (IsFaunaSettingKey(setting))
+        {
+            SeraphQoLServerConfig? probe = ReadServerConfigFromConfigLib(_capi);
+            if (probe != null)
+            {
+                probe.ApplySetting(setting, val);
+                FaunaPreset detected = probe.DetectMatchingPreset();
+                var entries = new List<(string Key, object Value)>(2)
+                {
+                    (nameof(SeraphQoLServerConfig.FaunaPreset), detected.ToString())
+                };
+                if (val?.GetValue() is { } rawChanged)
+                {
+                    entries.Add((setting!, rawChanged));
+                }
+                TryPushMultipleConfigLibSettings(_capi, entries, persistJson: true);
+            }
+        }
+
+        if (string.Equals(setting, nameof(SeraphQoLServerConfig.StackSizePreset), StringComparison.Ordinal)
+            && val?.GetValue() is { } rawStackPreset
+            && ConfigValueParser.TryEnum<StackSizePreset>(rawStackPreset, out StackSizePreset stackPreset)
+            && stackPreset != StackSizePreset.Custom)
+        {
+            var preview = new SeraphQoLServerConfig();
+            preview.ApplyStackPreset(stackPreset);
+            TryPushServerStackSizesToConfigLib(_capi, preview, persistJson: true);
+        }
+        else if (IsStackSettingKey(setting))
+        {
+            SeraphQoLServerConfig? probe = ReadServerConfigFromConfigLib(_capi);
+            if (probe != null)
+            {
+                probe.ApplySetting(setting, val);
+                StackSizePreset detected = probe.DetectMatchingStackPreset();
+                var entries = new List<(string Key, object Value)>(2)
+                {
+                    (nameof(SeraphQoLServerConfig.StackSizePreset), detected.ToString())
+                };
+                if (val?.GetValue() is { } rawChanged)
+                {
+                    entries.Add((setting!, rawChanged));
+                }
+                TryPushMultipleConfigLibSettings(_capi, entries, persistJson: true);
+            }
         }
 
         if (ClientConfig.ApplySetting(setting, val))
@@ -708,7 +762,7 @@ public sealed class SeraphQoLModSystem : ModSystem
 
     private void OnClientConfigLibSaved(string eventName, ref EnumHandling handling, IAttribute data)
     {
-        if (_capi == null) return;
+        if (_suppressConfigLibEvents || _capi == null) return;
         SeraphQoLClientConfig? loaded = _capi.LoadModConfig<SeraphQoLClientConfig>(ClientConfigFile);
         if (loaded != null)
         {
@@ -732,14 +786,25 @@ public sealed class SeraphQoLModSystem : ModSystem
         IAttribute? val = tree["value"];
         if (!ServerConfig.ApplySetting(setting, val)) return;
 
+        bool persistCombined = _sapi.Server.IsDedicated;
         if (string.Equals(setting, nameof(SeraphQoLServerConfig.FaunaPreset), StringComparison.Ordinal)
             && ServerConfig.FaunaPreset != FaunaPreset.Custom)
         {
-            TryPushServerFaunaToConfigLib(_sapi, ServerConfig);
+            TryPushServerFaunaToConfigLib(_sapi, ServerConfig, persistJson: persistCombined);
         }
-        else if (!string.Equals(setting, nameof(SeraphQoLServerConfig.FaunaPreset), StringComparison.Ordinal))
+        else if (IsFaunaSettingKey(setting))
         {
-            TryPushSingleConfigLibSetting(_sapi, nameof(SeraphQoLServerConfig.FaunaPreset), ServerConfig.FaunaPreset.ToString());
+            TryPushSingleConfigLibSetting(_sapi, nameof(SeraphQoLServerConfig.FaunaPreset), ServerConfig.FaunaPreset.ToString(), persistJson: persistCombined);
+        }
+
+        if (string.Equals(setting, nameof(SeraphQoLServerConfig.StackSizePreset), StringComparison.Ordinal)
+            && ServerConfig.StackSizePreset != StackSizePreset.Custom)
+        {
+            TryPushServerStackSizesToConfigLib(_sapi, ServerConfig, persistJson: persistCombined);
+        }
+        else if (IsStackSettingKey(setting))
+        {
+            TryPushSingleConfigLibSetting(_sapi, nameof(SeraphQoLServerConfig.StackSizePreset), ServerConfig.StackSizePreset.ToString(), persistJson: persistCombined);
         }
 
         ApplyUpdatedServerPolicyLive(_sapi);
@@ -747,20 +812,38 @@ public sealed class SeraphQoLModSystem : ModSystem
 
     private void OnServerConfigLibSaved(string eventName, ref EnumHandling handling, IAttribute data)
     {
-        if (_sapi == null) return;
+        if (_suppressConfigLibEvents || _sapi == null) return;
 
         SeraphQoLServerConfig? combined = LoadServerConfigFromCombined(_sapi);
         if (combined != null)
         {
-            if (combined.FaunaPreset != ServerConfig.FaunaPreset && combined.FaunaPreset != FaunaPreset.Custom)
+            bool faunaPresetSwitched = combined.FaunaPreset != FaunaPreset.Custom
+                && combined.FaunaPreset != ServerConfig.FaunaPreset
+                && combined.DetectMatchingPreset() != combined.FaunaPreset;
+            bool stackPresetSwitched = combined.StackSizePreset != StackSizePreset.Custom
+                && combined.StackSizePreset != ServerConfig.StackSizePreset
+                && combined.DetectMatchingStackPreset() != combined.StackSizePreset;
+
+            ServerConfig.SyncConfigSettingsFrom(combined);
+
+            if (faunaPresetSwitched)
             {
                 ServerConfig.ApplyPreset(combined.FaunaPreset);
-                TryPushServerFaunaToConfigLib(_sapi, ServerConfig);
+                TryPushServerFaunaToConfigLib(_sapi, ServerConfig, persistJson: _sapi.Server.IsDedicated);
             }
             else
             {
-                ServerConfig.SyncConfigSettingsFrom(combined);
                 ServerConfig.FaunaPreset = ServerConfig.DetectMatchingPreset();
+            }
+
+            if (stackPresetSwitched)
+            {
+                ServerConfig.ApplyStackPreset(combined.StackSizePreset);
+                TryPushServerStackSizesToConfigLib(_sapi, ServerConfig, persistJson: _sapi.Server.IsDedicated);
+            }
+            else
+            {
+                ServerConfig.StackSizePreset = ServerConfig.DetectMatchingStackPreset();
             }
         }
 
@@ -773,38 +856,59 @@ public sealed class SeraphQoLModSystem : ModSystem
         RefreshEffectivePolicy();
         _faunaService.ApplyToEntityTypes(sapi, EffectivePolicy);
         _faunaService.AdjustLoadedEntities(sapi, EffectivePolicy);
+        _stackSizeService.ApplyToCollectibles(sapi, EffectivePolicy);
         _serverChannel?.BroadcastPacket(ServerPolicySyncPacket.FromPolicy(EffectivePolicy));
     }
 
-    private void TryPushServerFaunaToConfigLib(ICoreAPI api, SeraphQoLServerConfig cfg)
+    private void TryPushServerStackSizesToConfigLib(ICoreAPI api, SeraphQoLServerConfig cfg, bool persistJson = false) =>
+        TryPushMultipleConfigLibSettings(api, cfg.GetStackPresetEntries(includePresetKey: true), persistJson);
+
+    private static bool IsFaunaSettingKey(string? setting) =>
+        setting is nameof(SeraphQoLServerConfig.EnableFaunaRebalance)
+            or nameof(SeraphQoLServerConfig.SmallPreyHealthMultiplier)
+            or nameof(SeraphQoLServerConfig.MediumLargePreyHealthMultiplier)
+            or nameof(SeraphQoLServerConfig.PredatorHealthMultiplier)
+            or nameof(SeraphQoLServerConfig.MeatDropMultiplier)
+            or nameof(SeraphQoLServerConfig.FatDropMultiplier)
+            or nameof(SeraphQoLServerConfig.HideDropMultiplier)
+            or nameof(SeraphQoLServerConfig.ByproductDropMultiplier)
+            or nameof(SeraphQoLServerConfig.ScaleDomesticatedHealth)
+            or nameof(SeraphQoLServerConfig.ScaleDomesticatedDrops)
+            or nameof(SeraphQoLServerConfig.IncludeAquaticFauna);
+
+    private static bool IsStackSettingKey(string? setting) =>
+        setting is nameof(SeraphQoLServerConfig.EnableStackSizeModifier)
+            or nameof(SeraphQoLServerConfig.GlobalStackMultiplier)
+            or nameof(SeraphQoLServerConfig.BuildingBlocksStackMultiplier)
+            or nameof(SeraphQoLServerConfig.ResourcesStackMultiplier)
+            or nameof(SeraphQoLServerConfig.FoodStackMultiplier)
+            or nameof(SeraphQoLServerConfig.MiscStackMultiplier)
+            or nameof(SeraphQoLServerConfig.AllowUnstackableContainersAndFurniture)
+            or nameof(SeraphQoLServerConfig.EmptyContainersMaxStack)
+            or nameof(SeraphQoLServerConfig.FurnitureUtilityMaxStack)
+            or nameof(SeraphQoLServerConfig.ClothingMaxStack)
+            or nameof(SeraphQoLServerConfig.MaxStackSizeCap);
+
+    private void TryPushServerFaunaToConfigLib(ICoreAPI api, SeraphQoLServerConfig cfg, bool persistJson = false) =>
+        TryPushMultipleConfigLibSettings(api, cfg.GetFaunaPresetEntries(includePresetKey: true), persistJson);
+
+    private void TryPushSingleConfigLibSetting(ICoreAPI api, string key, object value, bool persistJson = false) =>
+        TryPushMultipleConfigLibSettings(api, [(key, value)], persistJson);
+
+    private void TryPushMultipleConfigLibSettings(
+        ICoreAPI api,
+        IReadOnlyList<(string Key, object Value)> entries,
+        bool persistJson = false)
     {
-        TryPushMultipleConfigLibSettings(api, new (string Key, object Value)[]
+        object? modCfg = GetConfigLibConfig(api);
+        if (modCfg == null)
         {
-            (nameof(SeraphQoLServerConfig.EnableFaunaRebalance), cfg.EnableFaunaRebalance),
-            (nameof(SeraphQoLServerConfig.SmallPreyHealthMultiplier), (float)cfg.SmallPreyHealthMultiplier),
-            (nameof(SeraphQoLServerConfig.MediumLargePreyHealthMultiplier), (float)cfg.MediumLargePreyHealthMultiplier),
-            (nameof(SeraphQoLServerConfig.PredatorHealthMultiplier), (float)cfg.PredatorHealthMultiplier),
-            (nameof(SeraphQoLServerConfig.MeatDropMultiplier), (float)cfg.MeatDropMultiplier),
-            (nameof(SeraphQoLServerConfig.FatDropMultiplier), (float)cfg.FatDropMultiplier),
-            (nameof(SeraphQoLServerConfig.HideDropMultiplier), (float)cfg.HideDropMultiplier),
-            (nameof(SeraphQoLServerConfig.ByproductDropMultiplier), (float)cfg.ByproductDropMultiplier),
-            (nameof(SeraphQoLServerConfig.ScaleDomesticatedHealth), cfg.ScaleDomesticatedHealth),
-            (nameof(SeraphQoLServerConfig.ScaleDomesticatedDrops), cfg.ScaleDomesticatedDrops),
-            (nameof(SeraphQoLServerConfig.IncludeAquaticFauna), cfg.IncludeAquaticFauna)
-        });
-    }
-
-    private void TryPushSingleConfigLibSetting(ICoreAPI api, string key, object value) =>
-        TryPushMultipleConfigLibSettings(api, [(key, value)]);
-
-    private void TryPushMultipleConfigLibSettings(ICoreAPI api, IReadOnlyList<(string Key, object Value)> entries)
-    {
-        ModSystem? cfgLib = api.ModLoader.GetModSystem("ConfigLib.ConfigLibModSystem");
-        if (cfgLib == null) return;
-
-        MethodInfo? getConfig = cfgLib.GetType().GetMethod("GetConfig", [typeof(string)]);
-        object? modCfg = getConfig?.Invoke(cfgLib, [SeraphQoLLang.Domain]);
-        if (modCfg == null) return;
+            if (persistJson)
+            {
+                StoreConfigEntries(api, ClientConfigFile, entries);
+            }
+            return;
+        }
 
         MethodInfo? getSetting = modCfg.GetType().GetMethod("GetSetting", [typeof(string)]);
         if (getSetting == null) return;
@@ -815,14 +919,104 @@ public sealed class SeraphQoLModSystem : ModSystem
             foreach ((string key, object value) in entries)
             {
                 object? settingObj = getSetting.Invoke(modCfg, [key]);
-                MethodInfo? assign = settingObj?.GetType().GetMethod("AssignSettingValue", [typeof(object)]);
-                assign?.Invoke(settingObj, [value]);
+                PropertyInfo? valueProp = settingObj?.GetType().GetProperty("Value");
+                if (valueProp == null || !valueProp.CanWrite) continue;
+
+                var jsonValue = new JsonObject(JToken.FromObject(value));
+                valueProp.SetValue(settingObj, jsonValue);
+            }
+
+            if (persistJson)
+            {
+                PersistConfigLibSnapshotToJson(api, modCfg, ClientConfigFile, entries);
             }
         }
         finally
         {
             _suppressConfigLibEvents = false;
         }
+    }
+
+    private static object? GetConfigLibConfig(ICoreAPI api)
+    {
+        ModSystem? cfgLib = api.ModLoader.GetModSystem("ConfigLib.ConfigLibModSystem");
+        if (cfgLib == null) return null;
+
+        MethodInfo? getConfig = cfgLib.GetType().GetMethod("GetConfig", [typeof(string)]);
+        return getConfig?.Invoke(cfgLib, [SeraphQoLLang.Domain]);
+    }
+
+    private static SeraphQoLServerConfig? ReadServerConfigFromConfigLib(ICoreAPI api)
+    {
+        object? modCfg = GetConfigLibConfig(api);
+        if (modCfg == null) return null;
+
+        MethodInfo? getSetting = modCfg.GetType().GetMethod("GetSetting", [typeof(string)]);
+        if (getSetting == null) return null;
+
+        var jobj = new JObject();
+        foreach (PropertyInfo prop in typeof(SeraphQoLServerConfig).GetProperties(BindingFlags.Public | BindingFlags.Instance))
+        {
+            if (!prop.CanWrite) continue;
+            object? settingObj = getSetting.Invoke(modCfg, [prop.Name]);
+            if (settingObj?.GetType().GetProperty("Value")?.GetValue(settingObj) is JsonObject jo && jo.Token != null)
+            {
+                jobj[prop.Name] = jo.Token.DeepClone();
+            }
+        }
+
+        return jobj.ToObject<SeraphQoLServerConfig>();
+    }
+
+    private static void PersistConfigLibSnapshotToJson(
+        ICoreAPI api,
+        object modCfg,
+        string fileName,
+        IReadOnlyList<(string Key, object Value)> fallbackEntries)
+    {
+        JObject target = api.LoadModConfig<JObject>(fileName) ?? new JObject();
+        MethodInfo? getSetting = modCfg.GetType().GetMethod("GetSetting", [typeof(string)]);
+
+        if (getSetting != null)
+        {
+            foreach (string key in GetAllConfigLibKeys())
+            {
+                object? settingObj = getSetting.Invoke(modCfg, [key]);
+                if (settingObj?.GetType().GetProperty("Value")?.GetValue(settingObj) is JsonObject jo && jo.Token != null)
+                {
+                    target[key] = jo.Token.DeepClone();
+                }
+            }
+        }
+
+        foreach ((string key, object value) in fallbackEntries)
+        {
+            target[key] = JToken.FromObject(value);
+        }
+
+        api.StoreModConfig(target, fileName);
+    }
+
+    private static IEnumerable<string> GetAllConfigLibKeys()
+    {
+        foreach (PropertyInfo prop in typeof(SeraphQoLClientConfig).GetProperties(BindingFlags.Public | BindingFlags.Instance))
+        {
+            if (prop.CanWrite) yield return prop.Name;
+        }
+        foreach (PropertyInfo prop in typeof(SeraphQoLServerConfig).GetProperties(BindingFlags.Public | BindingFlags.Instance))
+        {
+            if (prop.CanWrite) yield return prop.Name;
+        }
+    }
+
+    private static void StoreConfigEntries(ICoreAPI api, string fileName, IReadOnlyList<(string Key, object Value)> entries)
+    {
+        JObject target = api.LoadModConfig<JObject>(fileName) ?? new JObject();
+        foreach ((string key, object value) in entries)
+        {
+            target[key] = JToken.FromObject(value);
+        }
+        api.StoreModConfig(target, fileName);
     }
 
     private static void StoreMergedConfig(ICoreAPI api, string fileName, object source)
@@ -860,7 +1054,9 @@ public sealed class SeraphQoLModSystem : ModSystem
         JObject? combined = api.LoadModConfig<JObject>(ClientConfigFile);
         if (combined == null) return null;
         if (!combined.ContainsKey(nameof(SeraphQoLServerConfig.EnableFaunaRebalance))
-            && !combined.ContainsKey(nameof(SeraphQoLServerConfig.FaunaPreset)))
+            && !combined.ContainsKey(nameof(SeraphQoLServerConfig.FaunaPreset))
+            && !combined.ContainsKey(nameof(SeraphQoLServerConfig.EnableStackSizeModifier))
+            && !combined.ContainsKey(nameof(SeraphQoLServerConfig.StackSizePreset)))
         {
             return null;
         }

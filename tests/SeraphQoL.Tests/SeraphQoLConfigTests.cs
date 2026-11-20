@@ -66,6 +66,8 @@ public sealed class SeraphQoLConfigTests
         Assert.False(cfg.HealthBarShowPlayers);
         Assert.False(cfg.HealthBarOnlyWhenDamaged);
         Assert.False(cfg.HealthBarRequireSneak);
+        Assert.False(cfg.HealthBarAlwaysShow);
+        Assert.Equal(2.5, cfg.HealthBarLingerSeconds, 3);
         Assert.Equal(18, cfg.HealthBarRange);
         Assert.True(cfg.EnableResourceParticles);
     }
@@ -85,7 +87,8 @@ public sealed class SeraphQoLConfigTests
             AlloySearchRadius = 25,
             AnimalIndicatorRange = 999,
             AnimalIndicatorOpacity = 5.0,
-            AnimalIndicatorScale = 0.05
+            AnimalIndicatorScale = 0.05,
+            HealthBarLingerSeconds = 99.0
         };
 
         cfg.Normalize();
@@ -104,6 +107,7 @@ public sealed class SeraphQoLConfigTests
         Assert.Equal(SeraphQoLClientConfig.MaxAnimalIndicatorRange, cfg.AnimalIndicatorRange);
         Assert.Equal(SeraphQoLClientConfig.MaxAnimalIndicatorOpacity, cfg.AnimalIndicatorOpacity);
         Assert.Equal(SeraphQoLClientConfig.MinAnimalIndicatorScale, cfg.AnimalIndicatorScale);
+        Assert.Equal(SeraphQoLClientConfig.MaxHealthBarLingerSeconds, cfg.HealthBarLingerSeconds, 3);
     }
 
     [Fact]
@@ -154,6 +158,12 @@ public sealed class SeraphQoLConfigTests
         Assert.True(cfg.ApplySetting(nameof(SeraphQoLClientConfig.HealthBarRange), new IntAttribute(99)));
         Assert.Equal(SeraphQoLClientConfig.MaxHealthBarRange, cfg.HealthBarRange);
 
+        Assert.True(cfg.ApplySetting(nameof(SeraphQoLClientConfig.HealthBarAlwaysShow), new BoolAttribute(true)));
+        Assert.True(cfg.HealthBarAlwaysShow);
+
+        Assert.True(cfg.ApplySetting(nameof(SeraphQoLClientConfig.HealthBarLingerSeconds), new DoubleAttribute(4.0)));
+        Assert.Equal(4.0, cfg.HealthBarLingerSeconds, 3);
+
         Assert.False(cfg.ApplySetting("UnknownKey", new BoolAttribute(true)));
     }
 
@@ -182,6 +192,19 @@ public sealed class SeraphQoLConfigTests
         Assert.True(cfg.RequireLandClaimPermission);
         Assert.True(cfg.AllowHotbarRefill);
         Assert.True(cfg.AllowProjectileTracker);
+
+        Assert.Equal(StackSizePreset.Vanilla, cfg.StackSizePreset);
+        Assert.False(cfg.EnableStackSizeModifier);
+        Assert.Equal(1.0, cfg.GlobalStackMultiplier);
+        Assert.Equal(1.0, cfg.BuildingBlocksStackMultiplier);
+        Assert.Equal(1.0, cfg.ResourcesStackMultiplier);
+        Assert.Equal(1.0, cfg.FoodStackMultiplier);
+        Assert.Equal(1.0, cfg.MiscStackMultiplier);
+        Assert.False(cfg.AllowUnstackableContainersAndFurniture);
+        Assert.Equal(1, cfg.EmptyContainersMaxStack);
+        Assert.Equal(1, cfg.FurnitureUtilityMaxStack);
+        Assert.Equal(1, cfg.ClothingMaxStack);
+        Assert.Equal(512, cfg.MaxStackSizeCap);
     }
 
     [Fact]
@@ -191,7 +214,12 @@ public sealed class SeraphQoLConfigTests
         {
             StoreNearbyRadius = 99,
             SmallPreyHealthMultiplier = 0.0,
-            MeatDropMultiplier = -2.0
+            MeatDropMultiplier = -2.0,
+            GlobalStackMultiplier = 999.0,
+            BuildingBlocksStackMultiplier = 0.01,
+            EmptyContainersMaxStack = 9999,
+            ClothingMaxStack = 0,
+            MaxStackSizeCap = 999999
         };
 
         cfg.Normalize();
@@ -199,6 +227,11 @@ public sealed class SeraphQoLConfigTests
         Assert.Equal(SeraphQoLServerConfig.MaxStoreNearbyRadius, cfg.StoreNearbyRadius);
         Assert.Equal(SeraphQoLServerConfig.MinMultiplier, cfg.SmallPreyHealthMultiplier);
         Assert.Equal(SeraphQoLServerConfig.MinMultiplier, cfg.MeatDropMultiplier);
+        Assert.Equal(SeraphQoLServerConfig.MaxStackMultiplier, cfg.GlobalStackMultiplier);
+        Assert.Equal(SeraphQoLServerConfig.MinStackMultiplier, cfg.BuildingBlocksStackMultiplier);
+        Assert.Equal(SeraphQoLServerConfig.MaxSingleItemMaxStack, cfg.EmptyContainersMaxStack);
+        Assert.Equal(SeraphQoLServerConfig.MinSingleItemMaxStack, cfg.ClothingMaxStack);
+        Assert.Equal(SeraphQoLServerConfig.MaxStackSizeCapValue, cfg.MaxStackSizeCap);
     }
 
     [Fact]
@@ -243,6 +276,55 @@ public sealed class SeraphQoLConfigTests
         Assert.True(cfg.ApplySetting(nameof(SeraphQoLServerConfig.EnableFaunaRebalance), new BoolAttribute(true)));
         Assert.True(cfg.ApplySetting(nameof(SeraphQoLServerConfig.PredatorHealthMultiplier), new DoubleAttribute(2.8)));
         Assert.Equal(FaunaPreset.Custom, cfg.FaunaPreset);
+    }
+
+    [Fact]
+    public void ServerConfig_ApplyStackPreset_AndManualEditsUpdateStackPresetState()
+    {
+        var cfg = new SeraphQoLServerConfig();
+        Assert.Equal(StackSizePreset.Vanilla, cfg.StackSizePreset);
+
+        Assert.True(cfg.ApplySetting(nameof(SeraphQoLServerConfig.StackSizePreset), new StringAttribute("P1nksBalanced")));
+        Assert.Equal(StackSizePreset.P1nksBalanced, cfg.StackSizePreset);
+        Assert.True(cfg.EnableStackSizeModifier);
+        Assert.Equal(2.0, cfg.BuildingBlocksStackMultiplier);
+        Assert.Equal(8, cfg.EmptyContainersMaxStack);
+        Assert.Equal(16, cfg.ClothingMaxStack);
+
+        Assert.True(cfg.ApplySetting(nameof(SeraphQoLServerConfig.BuildingBlocksStackMultiplier), new DoubleAttribute(3.5)));
+        Assert.Equal(StackSizePreset.Custom, cfg.StackSizePreset);
+
+        var sync = ServerPolicySyncPacket.FromPolicy(EffectiveServerPolicy.FromServerConfig(cfg));
+        ServerPolicySyncPacket decoded = RoundTrip(sync);
+        EffectiveServerPolicy restored = decoded.ToDisplayPolicy();
+        Assert.True(restored.EnableStackSizeModifier);
+        Assert.Equal(3.5, restored.BuildingBlocksStackMultiplier);
+        Assert.Equal(8, restored.EmptyContainersMaxStack);
+    }
+
+    [Fact]
+    public void ServerConfig_PresetEntries_IncludeAllDependentSettingsAndConvertToJsonObject()
+    {
+        var cfg = new SeraphQoLServerConfig();
+        cfg.ApplyPreset(FaunaPreset.RealisticHunt);
+        cfg.ApplyStackPreset(StackSizePreset.P1nksBalanced);
+
+        IReadOnlyList<(string Key, object Value)> faunaEntries = cfg.GetFaunaPresetEntries(includePresetKey: true);
+        Assert.Equal(12, faunaEntries.Count);
+        Assert.Contains(faunaEntries, e => e.Key == nameof(SeraphQoLServerConfig.FaunaPreset) && (string)e.Value == "RealisticHunt");
+        Assert.Contains(faunaEntries, e => e.Key == nameof(SeraphQoLServerConfig.PredatorHealthMultiplier) && Math.Abs((float)e.Value - 3.5f) < 0.001f);
+
+        IReadOnlyList<(string Key, object Value)> stackEntries = cfg.GetStackPresetEntries(includePresetKey: true);
+        Assert.Equal(12, stackEntries.Count);
+        Assert.Contains(stackEntries, e => e.Key == nameof(SeraphQoLServerConfig.StackSizePreset) && (string)e.Value == "P1nksBalanced");
+        Assert.Contains(stackEntries, e => e.Key == nameof(SeraphQoLServerConfig.EnableStackSizeModifier) && (bool)e.Value);
+        Assert.Contains(stackEntries, e => e.Key == nameof(SeraphQoLServerConfig.EmptyContainersMaxStack) && (int)e.Value == 8);
+
+        foreach ((string _, object val) in faunaEntries.Concat(stackEntries))
+        {
+            var jsonObj = new JsonObject(Newtonsoft.Json.Linq.JToken.FromObject(val));
+            Assert.NotNull(jsonObj.Token);
+        }
     }
 
     [Theory]

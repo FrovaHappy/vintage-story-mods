@@ -23,49 +23,115 @@ public sealed class ServerPolicySyncPacket
     [ProtoMember(14)] public bool RequireLandClaimPermission { get; set; }
     [ProtoMember(15)] public bool AllowHotbarRefill { get; set; }
     [ProtoMember(16)] public bool AllowProjectileTracker { get; set; }
+    [ProtoMember(17)] public bool EnableStackSizeModifier { get; set; }
+    [ProtoMember(18)] public double GlobalStackMultiplier { get; set; } = 1.0;
+    [ProtoMember(19)] public double BuildingBlocksStackMultiplier { get; set; } = 1.0;
+    [ProtoMember(20)] public double ResourcesStackMultiplier { get; set; } = 1.0;
+    [ProtoMember(21)] public double FoodStackMultiplier { get; set; } = 1.0;
+    [ProtoMember(22)] public double MiscStackMultiplier { get; set; } = 1.0;
+    [ProtoMember(23)] public bool AllowUnstackableContainersAndFurniture { get; set; }
+    [ProtoMember(24)] public int EmptyContainersMaxStack { get; set; } = 1;
+    [ProtoMember(25)] public int FurnitureUtilityMaxStack { get; set; } = 1;
+    [ProtoMember(26)] public int ClothingMaxStack { get; set; } = 1;
+    [ProtoMember(27)] public int MaxStackSizeCap { get; set; } = 512;
+    [ProtoMember(28)] public List<string> StackSizeBlacklist { get; set; } = new();
+    [ProtoMember(29)] public List<string> StackSizeOverridePatterns { get; set; } = new();
+    [ProtoMember(30)] public List<int> StackSizeOverrideValues { get; set; } = new();
 
-    public static ServerPolicySyncPacket FromPolicy(EffectiveServerPolicy policy) => new()
+    public static ServerPolicySyncPacket FromPolicy(EffectiveServerPolicy policy)
     {
-        EnableFaunaRebalance = policy.EnableFaunaRebalance,
-        SmallPreyHealthMultiplier = policy.SmallPreyHealthMultiplier,
-        MediumLargePreyHealthMultiplier = policy.MediumLargePreyHealthMultiplier,
-        PredatorHealthMultiplier = policy.PredatorHealthMultiplier,
-        MeatDropMultiplier = policy.MeatDropMultiplier,
-        FatDropMultiplier = policy.FatDropMultiplier,
-        HideDropMultiplier = policy.HideDropMultiplier,
-        ByproductDropMultiplier = policy.ByproductDropMultiplier,
-        ScaleDomesticatedHealth = policy.ScaleDomesticatedHealth,
-        ScaleDomesticatedDrops = policy.ScaleDomesticatedDrops,
-        EnableInventoryManagement = policy.EnableInventoryManagement,
-        EnableStoreNearby = policy.EnableStoreNearby,
-        StoreNearbyRadius = policy.StoreNearbyRadius,
-        RequireLandClaimPermission = policy.RequireLandClaimPermission,
-        AllowHotbarRefill = policy.AllowHotbarRefill,
-        AllowProjectileTracker = policy.AllowProjectileTracker
-    };
+        var overridePatterns = new List<string>(policy.StackSizeOverrides.Count);
+        var overrideValues = new List<int>(policy.StackSizeOverrides.Count);
+        foreach ((string pattern, int value) in policy.StackSizeOverrides)
+        {
+            overridePatterns.Add(pattern);
+            overrideValues.Add(value);
+        }
 
-    public EffectiveServerPolicy ToDisplayPolicy() => new(
-        EnableFaunaRebalance,
-        SmallPreyHealthMultiplier,
-        MediumLargePreyHealthMultiplier,
-        PredatorHealthMultiplier,
-        MeatDropMultiplier,
-        FatDropMultiplier,
-        HideDropMultiplier,
-        ByproductDropMultiplier,
-        ScaleDomesticatedHealth,
-        ScaleDomesticatedDrops,
-        IncludeAquaticFauna: false,
-        FaunaWhitelist: new HashSet<string>(),
-        FaunaBlacklist: new HashSet<string>(),
-        EnableInventoryManagement,
-        EnableStoreNearby,
-        StoreNearbyRadius,
-        RequireLandClaimPermission,
-        AdditionalContainerWhitelist: new HashSet<string>(),
-        ContainerBlacklist: new HashSet<string>(),
-        AllowHotbarRefill,
-        AllowProjectileTracker);
+        return new ServerPolicySyncPacket
+        {
+            EnableFaunaRebalance = policy.EnableFaunaRebalance,
+            SmallPreyHealthMultiplier = policy.SmallPreyHealthMultiplier,
+            MediumLargePreyHealthMultiplier = policy.MediumLargePreyHealthMultiplier,
+            PredatorHealthMultiplier = policy.PredatorHealthMultiplier,
+            MeatDropMultiplier = policy.MeatDropMultiplier,
+            FatDropMultiplier = policy.FatDropMultiplier,
+            HideDropMultiplier = policy.HideDropMultiplier,
+            ByproductDropMultiplier = policy.ByproductDropMultiplier,
+            ScaleDomesticatedHealth = policy.ScaleDomesticatedHealth,
+            ScaleDomesticatedDrops = policy.ScaleDomesticatedDrops,
+            EnableInventoryManagement = policy.EnableInventoryManagement,
+            EnableStoreNearby = policy.EnableStoreNearby,
+            StoreNearbyRadius = policy.StoreNearbyRadius,
+            RequireLandClaimPermission = policy.RequireLandClaimPermission,
+            AllowHotbarRefill = policy.AllowHotbarRefill,
+            AllowProjectileTracker = policy.AllowProjectileTracker,
+            EnableStackSizeModifier = policy.EnableStackSizeModifier,
+            GlobalStackMultiplier = policy.GlobalStackMultiplier,
+            BuildingBlocksStackMultiplier = policy.BuildingBlocksStackMultiplier,
+            ResourcesStackMultiplier = policy.ResourcesStackMultiplier,
+            FoodStackMultiplier = policy.FoodStackMultiplier,
+            MiscStackMultiplier = policy.MiscStackMultiplier,
+            AllowUnstackableContainersAndFurniture = policy.AllowUnstackableContainersAndFurniture,
+            EmptyContainersMaxStack = policy.EmptyContainersMaxStack,
+            FurnitureUtilityMaxStack = policy.FurnitureUtilityMaxStack,
+            ClothingMaxStack = policy.ClothingMaxStack,
+            MaxStackSizeCap = policy.MaxStackSizeCap,
+            StackSizeBlacklist = policy.StackSizeBlacklist.ToList(),
+            StackSizeOverridePatterns = overridePatterns,
+            StackSizeOverrideValues = overrideValues
+        };
+    }
+
+    public EffectiveServerPolicy ToDisplayPolicy()
+    {
+        var overrides = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
+        int count = Math.Min(StackSizeOverridePatterns.Count, StackSizeOverrideValues.Count);
+        for (int i = 0; i < count; i++)
+        {
+            string pattern = StackSizeOverridePatterns[i];
+            if (!string.IsNullOrWhiteSpace(pattern))
+            {
+                overrides[pattern] = StackSizeOverrideValues[i];
+            }
+        }
+
+        return new EffectiveServerPolicy(
+            EnableFaunaRebalance,
+            SmallPreyHealthMultiplier,
+            MediumLargePreyHealthMultiplier,
+            PredatorHealthMultiplier,
+            MeatDropMultiplier,
+            FatDropMultiplier,
+            HideDropMultiplier,
+            ByproductDropMultiplier,
+            ScaleDomesticatedHealth,
+            ScaleDomesticatedDrops,
+            IncludeAquaticFauna: false,
+            FaunaWhitelist: new HashSet<string>(),
+            FaunaBlacklist: new HashSet<string>(),
+            EnableInventoryManagement,
+            EnableStoreNearby,
+            StoreNearbyRadius,
+            RequireLandClaimPermission,
+            AdditionalContainerWhitelist: new HashSet<string>(),
+            ContainerBlacklist: new HashSet<string>(),
+            AllowHotbarRefill,
+            AllowProjectileTracker,
+            EnableStackSizeModifier,
+            GlobalStackMultiplier,
+            BuildingBlocksStackMultiplier,
+            ResourcesStackMultiplier,
+            FoodStackMultiplier,
+            MiscStackMultiplier,
+            AllowUnstackableContainersAndFurniture,
+            EmptyContainersMaxStack,
+            FurnitureUtilityMaxStack,
+            ClothingMaxStack,
+            MaxStackSizeCap,
+            new HashSet<string>(StackSizeBlacklist, StringComparer.OrdinalIgnoreCase),
+            overrides);
+    }
 }
 
 [ProtoContract]

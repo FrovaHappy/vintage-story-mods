@@ -29,6 +29,7 @@ public sealed class AnimalSexIndicatorRenderer : IRenderer
     private readonly Matrixf _model = new();
     private readonly Vec4f _tint = new(1f, 1f, 1f, 1f);
     private readonly Dictionary<string, LoadedTexture> _hudCache = new(StringComparer.Ordinal);
+    private readonly EntityHealthBarVisibilityState _healthBarVisibilityState = new();
 
     private MeshRef? _quadMesh;
     private IShaderProgram? _shader;
@@ -44,6 +45,8 @@ public sealed class AnimalSexIndicatorRenderer : IRenderer
 
     public double RenderOrder => 0.90;
     public int RenderRange => 36;
+
+    public void Reset() => _healthBarVisibilityState.Reset();
 
     public void Initialize()
     {
@@ -90,6 +93,10 @@ public sealed class AnimalSexIndicatorRenderer : IRenderer
         float unitPerPx = (float)(0.00476 * Math.Clamp(cfg.AnimalIndicatorScale, 0.4, 2.5));
         float baseOpacity = (float)Math.Clamp(cfg.AnimalIndicatorOpacity, 0.1, 1.0);
         float[] viewMat = _capi.Render.CameraMatrixOriginf;
+        long nowMs = _capi.World?.ElapsedMilliseconds ?? 0;
+        long? lookedAtEntityId = showAnyHealthBars && !cfg.HealthBarAlwaysShow
+            ? ResolveLookedAtEntityId(playerEntity, healthRange)
+            : null;
 
         var healthFilter = new EntityHealthBarFilter(
             cfg.EnableEntityHealthBars,
@@ -171,7 +178,15 @@ public sealed class AnimalSexIndicatorRenderer : IRenderer
                         IsHostileAi: false);
 
                     EntityHudCategory category = EntityHudClassifier.Classify(desc);
-                    showBar = EntityHudClassifier.ShouldShowHealthBar(category, curHp, maxHp, isSneaking, healthFilter);
+                    if (EntityHudClassifier.ShouldShowHealthBar(category, curHp, maxHp, isSneaking, healthFilter))
+                    {
+                        showBar = _healthBarVisibilityState.IsEntityVisible(
+                            entity.EntityId,
+                            lookedAtEntityId,
+                            cfg.HealthBarAlwaysShow,
+                            nowMs,
+                            cfg.HealthBarLingerSeconds);
+                    }
                 }
 
                 if (squares.Count == 0 && !showBar) continue;
@@ -219,10 +234,37 @@ public sealed class AnimalSexIndicatorRenderer : IRenderer
         }
         finally
         {
+            _healthBarVisibilityState.PruneExpired(nowMs);
             _shader.Stop();
             _capi.Render.GlToggleBlend(false);
             _capi.Render.GlEnableCullFace();
         }
+    }
+
+    private long? ResolveLookedAtEntityId(EntityPlayer playerEntity, double healthRange)
+    {
+        Entity? selected = _capi.World?.Player?.CurrentEntitySelection?.Entity;
+        if (selected != null && selected.Alive && selected.IsRendered && selected.EntityId != playerEntity.EntityId)
+        {
+            return selected.EntityId;
+        }
+
+        if (_capi.World == null) return null;
+
+        Vec3d eyePos = playerEntity.Pos.XYZ.AddCopy(playerEntity.LocalEyePos);
+        BlockSelection? blockSel = null;
+        EntitySelection? entitySel = null;
+        _capi.World.RayTraceForSelection(
+            eyePos,
+            playerEntity.Pos.Pitch,
+            playerEntity.Pos.Yaw,
+            (float)healthRange,
+            ref blockSel,
+            ref entitySel,
+            bfilter: (_, block) => block.RenderPass != EnumChunkRenderPass.Transparent && block.SelectionBoxes != null && block.SelectionBoxes.Length > 0,
+            efilter: e => e != null && e.EntityId != playerEntity.EntityId && e.Alive && e.IsRendered);
+
+        return entitySel?.Entity?.EntityId;
     }
 
     private static bool TryReadHealth(Entity entity, out float currentHealth, out float maxHealth)

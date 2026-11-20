@@ -42,6 +42,8 @@ public sealed class SeraphQoLClientConfig
     public const double MaxAnimalIndicatorScale = 2.0;
     public const int MinHealthBarRange = 4;
     public const int MaxHealthBarRange = 32;
+    public const double MinHealthBarLingerSeconds = 0.0;
+    public const double MaxHealthBarLingerSeconds = 30.0;
 
     [JsonConverter(typeof(StringEnumConverter))]
     public SortOrder SortOrder { get; set; } = SortOrder.Category;
@@ -114,6 +116,8 @@ public sealed class SeraphQoLClientConfig
     public bool HealthBarShowPlayers { get; set; } = false;
     public bool HealthBarOnlyWhenDamaged { get; set; } = false;
     public bool HealthBarRequireSneak { get; set; } = false;
+    public bool HealthBarAlwaysShow { get; set; } = false;
+    public double HealthBarLingerSeconds { get; set; } = 2.5;
     public int HealthBarRange { get; set; } = 18;
 
     public bool EnableResourceParticles { get; set; } = true;
@@ -136,6 +140,7 @@ public sealed class SeraphQoLClientConfig
         AnimalIndicatorRange = Math.Clamp(AnimalIndicatorRange, MinAnimalIndicatorRange, MaxAnimalIndicatorRange);
         AnimalIndicatorOpacity = Math.Clamp(double.IsNaN(AnimalIndicatorOpacity) ? 0.90 : AnimalIndicatorOpacity, MinAnimalIndicatorOpacity, MaxAnimalIndicatorOpacity);
         AnimalIndicatorScale = Math.Clamp(double.IsNaN(AnimalIndicatorScale) ? 1.0 : AnimalIndicatorScale, MinAnimalIndicatorScale, MaxAnimalIndicatorScale);
+        HealthBarLingerSeconds = Math.Clamp(double.IsNaN(HealthBarLingerSeconds) ? 2.5 : HealthBarLingerSeconds, MinHealthBarLingerSeconds, MaxHealthBarLingerSeconds);
         HealthBarRange = Math.Clamp(HealthBarRange, MinHealthBarRange, MaxHealthBarRange);
     }
 
@@ -317,6 +322,11 @@ public sealed class SeraphQoLClientConfig
                 return ConfigValueParser.TryBool(raw, v => HealthBarOnlyWhenDamaged = v);
             case nameof(HealthBarRequireSneak):
                 return ConfigValueParser.TryBool(raw, v => HealthBarRequireSneak = v);
+            case nameof(HealthBarAlwaysShow):
+                return ConfigValueParser.TryBool(raw, v => HealthBarAlwaysShow = v);
+            case nameof(HealthBarLingerSeconds):
+                if (ConfigValueParser.TryDouble(raw, v => HealthBarLingerSeconds = v)) { Normalize(); return true; }
+                return false;
             case nameof(HealthBarRange):
                 if (ConfigValueParser.TryInt(raw, v => HealthBarRange = v)) { Normalize(); return true; }
                 return false;

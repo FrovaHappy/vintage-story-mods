@@ -286,3 +286,78 @@ public static class EntityHudClassifier
         return $"{curStr}/{maxStr}";
     }
 }
+
+/// <summary>
+/// Maquina de estados pura por entidad para mostrar la barra de vida solo al mirarla (con retardo de desaparicion)
+/// o siempre cuando HealthBarAlwaysShow esta activado.
+/// </summary>
+public sealed class EntityHealthBarVisibilityState
+{
+    private readonly Dictionary<long, long> _visibleUntilMsByEntityId = new();
+
+    public bool IsEntityVisible(
+        long entityId,
+        long? lookedAtEntityId,
+        bool alwaysShow,
+        long nowMs,
+        double lingerSeconds)
+    {
+        if (alwaysShow)
+        {
+            return true;
+        }
+
+        double clampedDelay = double.IsNaN(lingerSeconds) ? 0.0 : Math.Clamp(lingerSeconds, 0.0, 30.0);
+        long delayMs = (long)Math.Round(clampedDelay * 1000.0);
+
+        if (lookedAtEntityId == entityId)
+        {
+            if (delayMs > 0)
+            {
+                _visibleUntilMsByEntityId[entityId] = nowMs + delayMs;
+            }
+            else
+            {
+                _visibleUntilMsByEntityId.Remove(entityId);
+            }
+            return true;
+        }
+
+        if (_visibleUntilMsByEntityId.TryGetValue(entityId, out long expireAtMs))
+        {
+            if (nowMs < expireAtMs)
+            {
+                return true;
+            }
+
+            _visibleUntilMsByEntityId.Remove(entityId);
+        }
+
+        return false;
+    }
+
+    public void PruneExpired(long nowMs)
+    {
+        if (_visibleUntilMsByEntityId.Count == 0) return;
+
+        List<long>? toRemove = null;
+        foreach ((long entityId, long expireAtMs) in _visibleUntilMsByEntityId)
+        {
+            if (nowMs >= expireAtMs)
+            {
+                toRemove ??= new List<long>();
+                toRemove.Add(entityId);
+            }
+        }
+
+        if (toRemove != null)
+        {
+            foreach (long id in toRemove)
+            {
+                _visibleUntilMsByEntityId.Remove(id);
+            }
+        }
+    }
+
+    public void Reset() => _visibleUntilMsByEntityId.Clear();
+}
