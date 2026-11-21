@@ -3,9 +3,9 @@
   "modid": "seraphui",
   "name": "Seraph UI",
   "authors": [
-    "VintageStoryMods"
+    "FrovaHappy"
   ],
-  "description": "Biblioteca de componentes de interfaz grafica desacoplada y reusable para mods de Vintage Story.",
+  "description": "Biblioteca de componentes de interfaz grafica desacoplada y reusable para mods de Vintage Story. Impulsado con IA · Hecho en Argentina.",
   "version": "0.1.0",
   "side": "Client",
   "iconPath": "modicon.png",

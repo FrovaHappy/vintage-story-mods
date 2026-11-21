@@ -2,6 +2,7 @@ using System.Reflection;
 using HarmonyLib;
 using Newtonsoft.Json.Linq;
 using SeraphQoL.Alloy;
+using SeraphQoL.Backpacks;
 using SeraphQoL.Client;
 using SeraphQoL.Config;
 using SeraphQoL.Exploration;
@@ -44,6 +45,7 @@ public sealed class SeraphQoLModSystem : ModSystem
 
     private readonly FaunaAssetsService _faunaService = new();
     private readonly StackSizeAssetsService _stackSizeService = new();
+    private readonly BackpackAssetsService _backpackService = new();
     private ServerInventoryExecutor? _inventoryExecutor;
     private ProjectileTrackerServer? _projectileTrackerServer;
     private ProjectileTrackerClient? _projectileTrackerClient;
@@ -79,6 +81,7 @@ public sealed class SeraphQoLModSystem : ModSystem
             ClientConfig.Normalize();
             StoreMergedConfig(api, ClientConfigFile, ClientConfig);
             SeraphQoLClientPatches.ClientInstance = this;
+            SeraphQoLCommonPatches.ClientInstance = this;
         }
         else
         {
@@ -87,6 +90,7 @@ public sealed class SeraphQoLModSystem : ModSystem
             ServerConfig.Normalize();
             api.StoreModConfig(ServerConfig, ServerConfigFile);
             EffectivePolicy = EffectiveServerPolicy.FromServerConfig(ServerConfig);
+            SeraphQoLCommonPatches.ServerInstance = this;
         }
 
         string sideId = _isClient ? $"{HarmonyId}.client" : $"{HarmonyId}.server";
@@ -112,11 +116,13 @@ public sealed class SeraphQoLModSystem : ModSystem
             RefreshEffectivePolicy();
             _faunaService.ApplyToEntityTypes(sapi, EffectivePolicy);
             _stackSizeService.ApplyToCollectibles(sapi, EffectivePolicy);
+            _backpackService.ApplyToCollectibles(sapi, EffectivePolicy);
         }
         else if (api is ICoreClientAPI capi)
         {
             _resourceParticlesService?.ApplyConfiguredParticles();
             _stackSizeService.ApplyToCollectibles(capi, EffectivePolicy);
+            _backpackService.ApplyToCollectibles(capi, EffectivePolicy);
         }
     }
 
@@ -158,7 +164,11 @@ public sealed class SeraphQoLModSystem : ModSystem
         api.Event.SaveGameLoaded += RefreshEffectivePolicy;
         api.Event.PlayerJoin += OnServerPlayerJoin;
         api.Event.PlayerNowPlaying += OnServerPlayerNowPlaying;
-        api.Event.PlayerDisconnect += player => LockedSlots.ClearPlayer(player.PlayerUID);
+        api.Event.PlayerDisconnect += player =>
+        {
+            LockedSlots.ClearPlayer(player.PlayerUID);
+            _backpackService.ClearPendingDrops(player.PlayerUID);
+        };
         api.Event.OnEntitySpawn += entity => _faunaService.AdjustSpawnedEntity(entity, EffectivePolicy);
 
         RegisterServerConfigLib(api);
@@ -477,7 +487,16 @@ public sealed class SeraphQoLModSystem : ModSystem
     private void OnServerPlayerNowPlaying(IServerPlayer player)
     {
         RefreshEffectivePolicy();
+        if (_sapi != null)
+        {
+            _backpackService.FlushPendingDrops(_sapi, player);
+        }
         _serverChannel?.SendPacket(ServerPolicySyncPacket.FromPolicy(EffectivePolicy), player);
+    }
+
+    public void OnHeldBagGetOrCreateSlots(ItemStack bagStack, int targetSlots, InventoryBase parentInv, IWorldAccessor world)
+    {
+        _backpackService.HandleHeldBagSlotsSync(bagStack, targetSlots, parentInv, world);
     }
 
     private void OnServerSortInventory(IServerPlayer player, SortInventoryPacket packet)
@@ -570,6 +589,9 @@ public sealed class SeraphQoLModSystem : ModSystem
         if (_capi != null)
         {
             _stackSizeService.ApplyToCollectibles(_capi, EffectivePolicy);
+            _backpackService.ApplyToCollectibles(_capi, EffectivePolicy);
+            BackpackAssetsService.ReloadOnlinePlayerBackpacks(_capi);
+            ReloadOpenInventoryDialogs();
         }
     }
 
@@ -747,6 +769,34 @@ public sealed class SeraphQoLModSystem : ModSystem
             }
         }
 
+        if (string.Equals(setting, nameof(SeraphQoLServerConfig.BackpackPreset), StringComparison.Ordinal)
+            && val?.GetValue() is { } rawBackpackPreset
+            && ConfigValueParser.TryEnum<BackpackPreset>(rawBackpackPreset, out BackpackPreset backpackPreset)
+            && backpackPreset != BackpackPreset.Custom)
+        {
+            var preview = new SeraphQoLServerConfig();
+            preview.ApplyBackpackPreset(backpackPreset);
+            TryPushServerBackpacksToConfigLib(_capi, preview, persistJson: true);
+        }
+        else if (IsBackpackSettingKey(setting))
+        {
+            SeraphQoLServerConfig? probe = ReadServerConfigFromConfigLib(_capi);
+            if (probe != null)
+            {
+                probe.ApplySetting(setting, val);
+                BackpackPreset detected = probe.DetectMatchingBackpackPreset();
+                var entries = new List<(string Key, object Value)>(2)
+                {
+                    (nameof(SeraphQoLServerConfig.BackpackPreset), detected.ToString())
+                };
+                if (val?.GetValue() is { } rawChanged)
+                {
+                    entries.Add((setting!, rawChanged));
+                }
+                TryPushMultipleConfigLibSettings(_capi, entries, persistJson: true);
+            }
+        }
+
         if (ClientConfig.ApplySetting(setting, val))
         {
             SaveClientConfig();
@@ -807,6 +857,16 @@ public sealed class SeraphQoLModSystem : ModSystem
             TryPushSingleConfigLibSetting(_sapi, nameof(SeraphQoLServerConfig.StackSizePreset), ServerConfig.StackSizePreset.ToString(), persistJson: persistCombined);
         }
 
+        if (string.Equals(setting, nameof(SeraphQoLServerConfig.BackpackPreset), StringComparison.Ordinal)
+            && ServerConfig.BackpackPreset != BackpackPreset.Custom)
+        {
+            TryPushServerBackpacksToConfigLib(_sapi, ServerConfig, persistJson: persistCombined);
+        }
+        else if (IsBackpackSettingKey(setting))
+        {
+            TryPushSingleConfigLibSetting(_sapi, nameof(SeraphQoLServerConfig.BackpackPreset), ServerConfig.BackpackPreset.ToString(), persistJson: persistCombined);
+        }
+
         ApplyUpdatedServerPolicyLive(_sapi);
     }
 
@@ -823,6 +883,9 @@ public sealed class SeraphQoLModSystem : ModSystem
             bool stackPresetSwitched = combined.StackSizePreset != StackSizePreset.Custom
                 && combined.StackSizePreset != ServerConfig.StackSizePreset
                 && combined.DetectMatchingStackPreset() != combined.StackSizePreset;
+            bool backpackPresetSwitched = combined.BackpackPreset != BackpackPreset.Custom
+                && combined.BackpackPreset != ServerConfig.BackpackPreset
+                && combined.DetectMatchingBackpackPreset() != combined.BackpackPreset;
 
             ServerConfig.SyncConfigSettingsFrom(combined);
 
@@ -845,6 +908,16 @@ public sealed class SeraphQoLModSystem : ModSystem
             {
                 ServerConfig.StackSizePreset = ServerConfig.DetectMatchingStackPreset();
             }
+
+            if (backpackPresetSwitched)
+            {
+                ServerConfig.ApplyBackpackPreset(combined.BackpackPreset);
+                TryPushServerBackpacksToConfigLib(_sapi, ServerConfig, persistJson: _sapi.Server.IsDedicated);
+            }
+            else
+            {
+                ServerConfig.BackpackPreset = ServerConfig.DetectMatchingBackpackPreset();
+            }
         }
 
         ApplyUpdatedServerPolicyLive(_sapi);
@@ -857,11 +930,16 @@ public sealed class SeraphQoLModSystem : ModSystem
         _faunaService.ApplyToEntityTypes(sapi, EffectivePolicy);
         _faunaService.AdjustLoadedEntities(sapi, EffectivePolicy);
         _stackSizeService.ApplyToCollectibles(sapi, EffectivePolicy);
+        _backpackService.ApplyToCollectibles(sapi, EffectivePolicy);
+        BackpackAssetsService.ReloadOnlinePlayerBackpacks(sapi);
         _serverChannel?.BroadcastPacket(ServerPolicySyncPacket.FromPolicy(EffectivePolicy));
     }
 
     private void TryPushServerStackSizesToConfigLib(ICoreAPI api, SeraphQoLServerConfig cfg, bool persistJson = false) =>
         TryPushMultipleConfigLibSettings(api, cfg.GetStackPresetEntries(includePresetKey: true), persistJson);
+
+    private void TryPushServerBackpacksToConfigLib(ICoreAPI api, SeraphQoLServerConfig cfg, bool persistJson = false) =>
+        TryPushMultipleConfigLibSettings(api, cfg.GetBackpackPresetEntries(includePresetKey: true), persistJson);
 
     private static bool IsFaunaSettingKey(string? setting) =>
         setting is nameof(SeraphQoLServerConfig.EnableFaunaRebalance)
@@ -888,6 +966,15 @@ public sealed class SeraphQoLModSystem : ModSystem
             or nameof(SeraphQoLServerConfig.FurnitureUtilityMaxStack)
             or nameof(SeraphQoLServerConfig.ClothingMaxStack)
             or nameof(SeraphQoLServerConfig.MaxStackSizeCap);
+
+    private static bool IsBackpackSettingKey(string? setting) =>
+        setting is nameof(SeraphQoLServerConfig.EnableBackpackExpansion)
+            or nameof(SeraphQoLServerConfig.GlobalBackpackMultiplier)
+            or nameof(SeraphQoLServerConfig.StandardBackpacksMultiplier)
+            or nameof(SeraphQoLServerConfig.SpecializedBagsMultiplier)
+            or nameof(SeraphQoLServerConfig.SaddlebagsMultiplier)
+            or nameof(SeraphQoLServerConfig.ModdedBackpacksMultiplier)
+            or nameof(SeraphQoLServerConfig.MaxBackpackSlotsCap);
 
     private void TryPushServerFaunaToConfigLib(ICoreAPI api, SeraphQoLServerConfig cfg, bool persistJson = false) =>
         TryPushMultipleConfigLibSettings(api, cfg.GetFaunaPresetEntries(includePresetKey: true), persistJson);
@@ -1056,7 +1143,9 @@ public sealed class SeraphQoLModSystem : ModSystem
         if (!combined.ContainsKey(nameof(SeraphQoLServerConfig.EnableFaunaRebalance))
             && !combined.ContainsKey(nameof(SeraphQoLServerConfig.FaunaPreset))
             && !combined.ContainsKey(nameof(SeraphQoLServerConfig.EnableStackSizeModifier))
-            && !combined.ContainsKey(nameof(SeraphQoLServerConfig.StackSizePreset)))
+            && !combined.ContainsKey(nameof(SeraphQoLServerConfig.StackSizePreset))
+            && !combined.ContainsKey(nameof(SeraphQoLServerConfig.EnableBackpackExpansion))
+            && !combined.ContainsKey(nameof(SeraphQoLServerConfig.BackpackPreset)))
         {
             return null;
         }
@@ -1111,6 +1200,14 @@ public sealed class SeraphQoLModSystem : ModSystem
         if (_isClient)
         {
             SeraphQoLClientPatches.ClientInstance = null;
+            if (ReferenceEquals(SeraphQoLCommonPatches.ClientInstance, this))
+            {
+                SeraphQoLCommonPatches.ClientInstance = null;
+            }
+        }
+        else if (ReferenceEquals(SeraphQoLCommonPatches.ServerInstance, this))
+        {
+            SeraphQoLCommonPatches.ServerInstance = null;
         }
         base.Dispose();
     }

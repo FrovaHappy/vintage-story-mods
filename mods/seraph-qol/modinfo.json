@@ -3,7 +3,7 @@
   "modid": "seraphqol",
   "name": "Seraph QoL",
   "authors": [
-    "VintageStoryMods"
+    "FrovaHappy"
   ],
   "contributors": [
     "Trojan96 (Storage Tweaks reference)",
@@ -11,9 +11,10 @@
     "Mirinimi (Inventory Profiles Next UX reference)",
     "CarFy (CFY Simple Refill reference)",
     "MrFastZombie (Projectile Tracker reference)",
-    "Particles Plus / Item Pickup Highlighter references"
+    "Particles Plus / Item Pickup Highlighter references",
+    "Dimasas (Bigger Backpacks reference)"
   ],
-  "description": "Suite modular de calidad de vida (inventario, refill, calculadora de aleaciones, menús radiales, indicadores de slots y fauna, partículas de recursos, equip light, resaltado y rastreo de proyectiles) y rebalanceo de fauna silvestre.",
+  "description": "Suite modular de calidad de vida (inventario, refill, calculadora de aleaciones, menús radiales, indicadores de slots y fauna, partículas de recursos, equip light, resaltado y rastreo de proyectiles) y rebalanceo de fauna silvestre. Impulsado con IA · Hecho en Argentina.",
   "version": "0.1.0",
   "side": "Universal",
   "iconPath": "modicon.png",

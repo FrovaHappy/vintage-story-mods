@@ -37,13 +37,28 @@ public sealed record EffectiveServerPolicy(
     int ClothingMaxStack = 1,
     int MaxStackSizeCap = 512,
     IReadOnlySet<string>? StackSizeBlacklist = null,
-    IReadOnlyDictionary<string, int>? StackSizeOverrides = null)
+    IReadOnlyDictionary<string, int>? StackSizeOverrides = null,
+    bool EnableBackpackExpansion = false,
+    double GlobalBackpackMultiplier = 1.0,
+    double StandardBackpacksMultiplier = 1.0,
+    double SpecializedBagsMultiplier = 1.0,
+    double SaddlebagsMultiplier = 1.0,
+    double ModdedBackpacksMultiplier = 1.0,
+    int MaxBackpackSlotsCap = 64,
+    IReadOnlySet<string>? BackpackBlacklist = null,
+    IReadOnlyDictionary<string, int>? BackpackOverrides = null)
 {
     public IReadOnlySet<string> StackSizeBlacklist { get; init; } =
         StackSizeBlacklist ?? new HashSet<string>(StringComparer.OrdinalIgnoreCase);
 
     public IReadOnlyDictionary<string, int> StackSizeOverrides { get; init; } =
         StackSizeOverrides ?? new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
+
+    public IReadOnlySet<string> BackpackBlacklist { get; init; } =
+        BackpackBlacklist ?? new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+
+    public IReadOnlyDictionary<string, int> BackpackOverrides { get; init; } =
+        BackpackOverrides ?? new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
 
     public static EffectiveServerPolicy FromServerConfig(SeraphQoLServerConfig server)
     {
@@ -82,6 +97,15 @@ public sealed record EffectiveServerPolicy(
             server.ClothingMaxStack,
             server.MaxStackSizeCap,
             new HashSet<string>(server.StackSizeBlacklist, StringComparer.OrdinalIgnoreCase),
-            new Dictionary<string, int>(server.StackSizeOverrides, StringComparer.OrdinalIgnoreCase));
+            new Dictionary<string, int>(server.StackSizeOverrides, StringComparer.OrdinalIgnoreCase),
+            server.EnableBackpackExpansion,
+            server.GlobalBackpackMultiplier,
+            server.StandardBackpacksMultiplier,
+            server.SpecializedBagsMultiplier,
+            server.SaddlebagsMultiplier,
+            server.ModdedBackpacksMultiplier,
+            server.MaxBackpackSlotsCap,
+            new HashSet<string>(server.BackpackBlacklist, StringComparer.OrdinalIgnoreCase),
+            new Dictionary<string, int>(server.BackpackOverrides, StringComparer.OrdinalIgnoreCase));
     }
 }

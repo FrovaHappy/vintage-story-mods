@@ -3,6 +3,8 @@
 ## Ficha ModDB
 - **Nombre público:** Seraph UI
 - **`modid`:** `seraphui`
+- **Autor:** `FrovaHappy`
+- **Origen / Desarrollo:** Impulsado con IA · Hecho en Argentina
 - **Versión actual:** `0.1.0`
 - **Lado (`Side`):** `Client`
 - **Versión de Vintage Story:** `1.22.0`

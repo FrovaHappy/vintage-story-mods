@@ -37,16 +37,21 @@ public sealed class ServerPolicySyncPacket
     [ProtoMember(28)] public List<string> StackSizeBlacklist { get; set; } = new();
     [ProtoMember(29)] public List<string> StackSizeOverridePatterns { get; set; } = new();
     [ProtoMember(30)] public List<int> StackSizeOverrideValues { get; set; } = new();
+    [ProtoMember(31)] public bool EnableBackpackExpansion { get; set; }
+    [ProtoMember(32)] public double GlobalBackpackMultiplier { get; set; } = 1.0;
+    [ProtoMember(33)] public double StandardBackpacksMultiplier { get; set; } = 1.0;
+    [ProtoMember(34)] public double SpecializedBagsMultiplier { get; set; } = 1.0;
+    [ProtoMember(35)] public double SaddlebagsMultiplier { get; set; } = 1.0;
+    [ProtoMember(36)] public double ModdedBackpacksMultiplier { get; set; } = 1.0;
+    [ProtoMember(37)] public int MaxBackpackSlotsCap { get; set; } = 64;
+    [ProtoMember(38)] public List<string> BackpackBlacklist { get; set; } = new();
+    [ProtoMember(39)] public List<string> BackpackOverridePatterns { get; set; } = new();
+    [ProtoMember(40)] public List<int> BackpackOverrideValues { get; set; } = new();
 
     public static ServerPolicySyncPacket FromPolicy(EffectiveServerPolicy policy)
     {
-        var overridePatterns = new List<string>(policy.StackSizeOverrides.Count);
-        var overrideValues = new List<int>(policy.StackSizeOverrides.Count);
-        foreach ((string pattern, int value) in policy.StackSizeOverrides)
-        {
-            overridePatterns.Add(pattern);
-            overrideValues.Add(value);
-        }
+        (List<string> overridePatterns, List<int> overrideValues) = SplitOverrideDictionary(policy.StackSizeOverrides);
+        (List<string> backpackPatterns, List<int> backpackValues) = SplitOverrideDictionary(policy.BackpackOverrides);
 
         return new ServerPolicySyncPacket
         {
@@ -79,22 +84,24 @@ public sealed class ServerPolicySyncPacket
             MaxStackSizeCap = policy.MaxStackSizeCap,
             StackSizeBlacklist = policy.StackSizeBlacklist.ToList(),
             StackSizeOverridePatterns = overridePatterns,
-            StackSizeOverrideValues = overrideValues
+            StackSizeOverrideValues = overrideValues,
+            EnableBackpackExpansion = policy.EnableBackpackExpansion,
+            GlobalBackpackMultiplier = policy.GlobalBackpackMultiplier,
+            StandardBackpacksMultiplier = policy.StandardBackpacksMultiplier,
+            SpecializedBagsMultiplier = policy.SpecializedBagsMultiplier,
+            SaddlebagsMultiplier = policy.SaddlebagsMultiplier,
+            ModdedBackpacksMultiplier = policy.ModdedBackpacksMultiplier,
+            MaxBackpackSlotsCap = policy.MaxBackpackSlotsCap,
+            BackpackBlacklist = policy.BackpackBlacklist.ToList(),
+            BackpackOverridePatterns = backpackPatterns,
+            BackpackOverrideValues = backpackValues
         };
     }
 
     public EffectiveServerPolicy ToDisplayPolicy()
     {
-        var overrides = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
-        int count = Math.Min(StackSizeOverridePatterns.Count, StackSizeOverrideValues.Count);
-        for (int i = 0; i < count; i++)
-        {
-            string pattern = StackSizeOverridePatterns[i];
-            if (!string.IsNullOrWhiteSpace(pattern))
-            {
-                overrides[pattern] = StackSizeOverrideValues[i];
-            }
-        }
+        Dictionary<string, int> overrides = MergeOverrideDictionary(StackSizeOverridePatterns, StackSizeOverrideValues);
+        Dictionary<string, int> backpackOverrides = MergeOverrideDictionary(BackpackOverridePatterns, BackpackOverrideValues);
 
         return new EffectiveServerPolicy(
             EnableFaunaRebalance,
@@ -130,7 +137,43 @@ public sealed class ServerPolicySyncPacket
             ClothingMaxStack,
             MaxStackSizeCap,
             new HashSet<string>(StackSizeBlacklist, StringComparer.OrdinalIgnoreCase),
-            overrides);
+            overrides,
+            EnableBackpackExpansion,
+            GlobalBackpackMultiplier,
+            StandardBackpacksMultiplier,
+            SpecializedBagsMultiplier,
+            SaddlebagsMultiplier,
+            ModdedBackpacksMultiplier,
+            MaxBackpackSlotsCap,
+            new HashSet<string>(BackpackBlacklist, StringComparer.OrdinalIgnoreCase),
+            backpackOverrides);
+    }
+
+    private static (List<string> Patterns, List<int> Values) SplitOverrideDictionary(IReadOnlyDictionary<string, int> source)
+    {
+        var patterns = new List<string>(source.Count);
+        var values = new List<int>(source.Count);
+        foreach ((string pattern, int value) in source)
+        {
+            patterns.Add(pattern);
+            values.Add(value);
+        }
+        return (patterns, values);
+    }
+
+    private static Dictionary<string, int> MergeOverrideDictionary(IReadOnlyList<string> patterns, IReadOnlyList<int> values)
+    {
+        var result = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
+        int count = Math.Min(patterns.Count, values.Count);
+        for (int i = 0; i < count; i++)
+        {
+            string pattern = patterns[i];
+            if (!string.IsNullOrWhiteSpace(pattern))
+            {
+                result[pattern] = values[i];
+            }
+        }
+        return result;
     }
 }
 

@@ -1009,6 +1009,97 @@
       "default": 512,
       "range": { "min": 16, "max": 20000, "step": 16 },
       "weight": 12.6
+    },
+
+    {
+      "type": "separator",
+      "title": "seraphqol:config-section-backpacks",
+      "weight": 13.0
+    },
+    {
+      "code": "BackpackPreset",
+      "name": "BackpackPreset",
+      "ingui": "seraphqol:config-backpack-preset",
+      "comment": "seraphqol:config-backpack-preset-comment",
+      "type": "string",
+      "default": "Vanilla",
+      "values": [
+        "Vanilla",
+        "Balanced15x",
+        "BiggerBackpacks2x",
+        "Explorer3x",
+        "Custom"
+      ],
+      "weight": 13.05
+    },
+    {
+      "code": "EnableBackpackExpansion",
+      "name": "EnableBackpackExpansion",
+      "ingui": "seraphqol:config-enable-backpack-expansion",
+      "comment": "seraphqol:config-enable-backpack-expansion-comment",
+      "type": "boolean",
+      "default": false,
+      "weight": 13.1
+    },
+    {
+      "code": "GlobalBackpackMultiplier",
+      "name": "GlobalBackpackMultiplier",
+      "ingui": "seraphqol:config-global-backpack-multiplier",
+      "comment": "seraphqol:config-global-backpack-multiplier-comment",
+      "type": "float",
+      "default": 1.0,
+      "range": { "min": 0.5, "max": 8.0, "step": 0.25 },
+      "weight": 13.15
+    },
+    {
+      "code": "StandardBackpacksMultiplier",
+      "name": "StandardBackpacksMultiplier",
+      "ingui": "seraphqol:config-standard-backpacks-mult",
+      "comment": "seraphqol:config-standard-backpacks-mult-comment",
+      "type": "float",
+      "default": 1.0,
+      "range": { "min": 0.5, "max": 8.0, "step": 0.25 },
+      "weight": 13.2
+    },
+    {
+      "code": "SpecializedBagsMultiplier",
+      "name": "SpecializedBagsMultiplier",
+      "ingui": "seraphqol:config-specialized-bags-mult",
+      "comment": "seraphqol:config-specialized-bags-mult-comment",
+      "type": "float",
+      "default": 1.0,
+      "range": { "min": 0.5, "max": 8.0, "step": 0.25 },
+      "weight": 13.25
+    },
+    {
+      "code": "SaddlebagsMultiplier",
+      "name": "SaddlebagsMultiplier",
+      "ingui": "seraphqol:config-saddlebags-mult",
+      "comment": "seraphqol:config-saddlebags-mult-comment",
+      "type": "float",
+      "default": 1.0,
+      "range": { "min": 0.5, "max": 8.0, "step": 0.25 },
+      "weight": 13.3
+    },
+    {
+      "code": "ModdedBackpacksMultiplier",
+      "name": "ModdedBackpacksMultiplier",
+      "ingui": "seraphqol:config-modded-backpacks-mult",
+      "comment": "seraphqol:config-modded-backpacks-mult-comment",
+      "type": "float",
+      "default": 1.0,
+      "range": { "min": 0.5, "max": 8.0, "step": 0.25 },
+      "weight": 13.35
+    },
+    {
+      "code": "MaxBackpackSlotsCap",
+      "name": "MaxBackpackSlotsCap",
+      "ingui": "seraphqol:config-max-backpack-slots-cap",
+      "comment": "seraphqol:config-max-backpack-slots-cap-comment",
+      "type": "integer",
+      "default": 64,
+      "range": { "min": 8, "max": 256, "step": 4 },
+      "weight": 13.4
     }
   ]
 }

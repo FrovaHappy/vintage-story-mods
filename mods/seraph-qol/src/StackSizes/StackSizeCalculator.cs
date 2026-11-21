@@ -23,7 +23,7 @@ public sealed class StackSizeCalculator
             return vanilla;
         }
 
-        if (TryResolveOverride(item.Code, policy.StackSizeOverrides, out int overrideValue))
+        if (CodePatternMatcher.TryResolveOverride(item.Code, policy.StackSizeOverrides, out int overrideValue))
         {
             return Math.Clamp(overrideValue, 1, policy.MaxStackSizeCap);
         }
@@ -76,34 +76,5 @@ public sealed class StackSizeCalculator
         double combined = policy.GlobalStackMultiplier * categoryMultiplier;
         int scaled = (int)Math.Round(vanilla * combined, MidpointRounding.AwayFromZero);
         return Math.Clamp(scaled, 1, policy.MaxStackSizeCap);
-    }
-
-    private static bool TryResolveOverride(
-        string code,
-        IReadOnlyDictionary<string, int> overrides,
-        out int value)
-    {
-        if (overrides.Count == 0)
-        {
-            value = 0;
-            return false;
-        }
-
-        if (overrides.TryGetValue(code, out value))
-        {
-            return true;
-        }
-
-        foreach ((string pattern, int overrideVal) in overrides)
-        {
-            if (CodePatternMatcher.Matches(code, pattern))
-            {
-                value = overrideVal;
-                return true;
-            }
-        }
-
-        value = 0;
-        return false;
     }
 }

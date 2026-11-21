@@ -1,6 +1,8 @@
 using System.Reflection;
 using System.Reflection.Emit;
 using HarmonyLib;
+using SeraphQoL.Backpacks;
+using SeraphQoL.Config;
 using SeraphQoL.Inventory;
 using Vintagestory.API.Client;
 using Vintagestory.API.Common;
@@ -15,6 +17,9 @@ namespace SeraphQoL.Patches;
 [HarmonyPatch]
 public static class SeraphQoLCommonPatches
 {
+    public static SeraphQoLModSystem? ServerInstance { get; set; }
+    public static SeraphQoLModSystem? ClientInstance { get; set; }
+
     [HarmonyPostfix]
     [HarmonyPatch(typeof(InventoryBase), nameof(InventoryBase.GetSuitability))]
     public static void PostfixGetSuitability(ItemSlot sourceSlot, ItemSlot targetSlot, ref float __result)
@@ -24,6 +29,25 @@ public static class SeraphQoLCommonPatches
         {
             __result = 0f;
         }
+    }
+
+    [HarmonyPrefix]
+    [HarmonyPatch(typeof(CollectibleBehaviorHeldBag), nameof(CollectibleBehaviorHeldBag.GetOrCreateSlots))]
+    public static void PrefixGetOrCreateSlots(
+        CollectibleBehaviorHeldBag __instance,
+        ItemStack bagstack,
+        InventoryBase parentinv,
+        IWorldAccessor world)
+    {
+        if (bagstack == null || world == null) return;
+
+        SeraphQoLModSystem? mod = world.Side == EnumAppSide.Server
+            ? ServerInstance
+            : (ClientInstance ?? ServerInstance);
+        if (mod == null) return;
+
+        int targetSlots = __instance.GetQuantitySlots(bagstack);
+        mod.OnHeldBagGetOrCreateSlots(bagstack, targetSlots, parentinv, world);
     }
 }
 

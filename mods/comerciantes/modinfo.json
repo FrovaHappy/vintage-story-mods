@@ -3,9 +3,9 @@
   "modid": "tradersoverhaul",
   "name": "Traders Overhaul",
   "authors": [
-    "VintageStoryMods"
+    "FrovaHappy"
   ],
-  "description": "Sistema economico dinamico para comerciantes: afinidades por tipo, demanda diaria, anti-farmeo, valoracion transparente y directorio global.",
+  "description": "Sistema economico dinamico para comerciantes: afinidades por tipo, demanda diaria, anti-farmeo, valoracion transparente y directorio global. Impulsado con IA · Hecho en Argentina.",
   "version": "0.1.0",
   "side": "Universal",
   "iconPath": "modicon.png",

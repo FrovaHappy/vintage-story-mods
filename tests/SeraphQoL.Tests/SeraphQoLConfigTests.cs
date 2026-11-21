@@ -205,6 +205,15 @@ public sealed class SeraphQoLConfigTests
         Assert.Equal(1, cfg.FurnitureUtilityMaxStack);
         Assert.Equal(1, cfg.ClothingMaxStack);
         Assert.Equal(512, cfg.MaxStackSizeCap);
+
+        Assert.Equal(BackpackPreset.Vanilla, cfg.BackpackPreset);
+        Assert.False(cfg.EnableBackpackExpansion);
+        Assert.Equal(1.0, cfg.GlobalBackpackMultiplier);
+        Assert.Equal(1.0, cfg.StandardBackpacksMultiplier);
+        Assert.Equal(1.0, cfg.SpecializedBagsMultiplier);
+        Assert.Equal(1.0, cfg.SaddlebagsMultiplier);
+        Assert.Equal(1.0, cfg.ModdedBackpacksMultiplier);
+        Assert.Equal(64, cfg.MaxBackpackSlotsCap);
     }
 
     [Fact]
@@ -219,7 +228,10 @@ public sealed class SeraphQoLConfigTests
             BuildingBlocksStackMultiplier = 0.01,
             EmptyContainersMaxStack = 9999,
             ClothingMaxStack = 0,
-            MaxStackSizeCap = 999999
+            MaxStackSizeCap = 999999,
+            GlobalBackpackMultiplier = 99.0,
+            SaddlebagsMultiplier = 0.05,
+            MaxBackpackSlotsCap = 9999
         };
 
         cfg.Normalize();
@@ -232,6 +244,9 @@ public sealed class SeraphQoLConfigTests
         Assert.Equal(SeraphQoLServerConfig.MaxSingleItemMaxStack, cfg.EmptyContainersMaxStack);
         Assert.Equal(SeraphQoLServerConfig.MinSingleItemMaxStack, cfg.ClothingMaxStack);
         Assert.Equal(SeraphQoLServerConfig.MaxStackSizeCapValue, cfg.MaxStackSizeCap);
+        Assert.Equal(SeraphQoLServerConfig.MaxBackpackMultiplier, cfg.GlobalBackpackMultiplier);
+        Assert.Equal(SeraphQoLServerConfig.MinBackpackMultiplier, cfg.SaddlebagsMultiplier);
+        Assert.Equal(SeraphQoLServerConfig.MaxBackpackSlotsCapValue, cfg.MaxBackpackSlotsCap);
     }
 
     [Fact]
@@ -303,6 +318,34 @@ public sealed class SeraphQoLConfigTests
     }
 
     [Fact]
+    public void ServerConfig_ApplyBackpackPreset_AndManualEditsUpdateBackpackPresetState()
+    {
+        var cfg = new SeraphQoLServerConfig();
+        Assert.Equal(BackpackPreset.Vanilla, cfg.BackpackPreset);
+
+        Assert.True(cfg.ApplySetting(nameof(SeraphQoLServerConfig.BackpackPreset), new StringAttribute("BiggerBackpacks2x")));
+        Assert.Equal(BackpackPreset.BiggerBackpacks2x, cfg.BackpackPreset);
+        Assert.True(cfg.EnableBackpackExpansion);
+        Assert.Equal(2.0, cfg.StandardBackpacksMultiplier);
+        Assert.Equal(2.0, cfg.SaddlebagsMultiplier);
+        Assert.Equal(64, cfg.MaxBackpackSlotsCap);
+
+        Assert.True(cfg.ApplySetting(nameof(SeraphQoLServerConfig.SaddlebagsMultiplier), new DoubleAttribute(2.5)));
+        Assert.Equal(BackpackPreset.Custom, cfg.BackpackPreset);
+
+        cfg.BackpackBlacklist.Add("game:basket-*");
+        cfg.BackpackOverrides["game:backpack-sturdy"] = 24;
+
+        var sync = ServerPolicySyncPacket.FromPolicy(EffectiveServerPolicy.FromServerConfig(cfg));
+        ServerPolicySyncPacket decoded = RoundTrip(sync);
+        EffectiveServerPolicy restored = decoded.ToDisplayPolicy();
+        Assert.True(restored.EnableBackpackExpansion);
+        Assert.Equal(2.5, restored.SaddlebagsMultiplier);
+        Assert.Contains("game:basket-*", restored.BackpackBlacklist);
+        Assert.Equal(24, restored.BackpackOverrides["game:backpack-sturdy"]);
+    }
+
+    [Fact]
     public void ServerConfig_PresetEntries_IncludeAllDependentSettingsAndConvertToJsonObject()
     {
         var cfg = new SeraphQoLServerConfig();
@@ -320,7 +363,14 @@ public sealed class SeraphQoLConfigTests
         Assert.Contains(stackEntries, e => e.Key == nameof(SeraphQoLServerConfig.EnableStackSizeModifier) && (bool)e.Value);
         Assert.Contains(stackEntries, e => e.Key == nameof(SeraphQoLServerConfig.EmptyContainersMaxStack) && (int)e.Value == 8);
 
-        foreach ((string _, object val) in faunaEntries.Concat(stackEntries))
+        cfg.ApplyBackpackPreset(BackpackPreset.BiggerBackpacks2x);
+        IReadOnlyList<(string Key, object Value)> backpackEntries = cfg.GetBackpackPresetEntries(includePresetKey: true);
+        Assert.Equal(8, backpackEntries.Count);
+        Assert.Contains(backpackEntries, e => e.Key == nameof(SeraphQoLServerConfig.BackpackPreset) && (string)e.Value == "BiggerBackpacks2x");
+        Assert.Contains(backpackEntries, e => e.Key == nameof(SeraphQoLServerConfig.EnableBackpackExpansion) && (bool)e.Value);
+        Assert.Contains(backpackEntries, e => e.Key == nameof(SeraphQoLServerConfig.SaddlebagsMultiplier) && Math.Abs((float)e.Value - 2.0f) < 0.001f);
+
+        foreach ((string _, object val) in faunaEntries.Concat(stackEntries).Concat(backpackEntries))
         {
             var jsonObj = new JsonObject(Newtonsoft.Json.Linq.JToken.FromObject(val));
             Assert.NotNull(jsonObj.Token);

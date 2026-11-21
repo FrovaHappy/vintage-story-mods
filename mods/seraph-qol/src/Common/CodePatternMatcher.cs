@@ -17,6 +17,35 @@ public static class CodePatternMatcher
         return false;
     }
 
+    public static bool TryResolveOverride(
+        string code,
+        IReadOnlyDictionary<string, int> overrides,
+        out int value)
+    {
+        if (overrides.Count == 0 || string.IsNullOrWhiteSpace(code))
+        {
+            value = 0;
+            return false;
+        }
+
+        if (overrides.TryGetValue(code, out value))
+        {
+            return true;
+        }
+
+        foreach ((string pattern, int overrideVal) in overrides)
+        {
+            if (Matches(code, pattern))
+            {
+                value = overrideVal;
+                return true;
+            }
+        }
+
+        value = 0;
+        return false;
+    }
+
     public static bool Matches(string code, string pattern)
     {
         if (string.IsNullOrWhiteSpace(pattern)) return false;

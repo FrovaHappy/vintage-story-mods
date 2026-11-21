@@ -30,6 +30,18 @@ public enum StackSizePreset
 }
 
 /// <summary>
+/// Presets (prefabs) predefinidos para expansion de capacidad de mochilas en ConfigLib.
+/// </summary>
+public enum BackpackPreset
+{
+    Vanilla,
+    Balanced15x,
+    BiggerBackpacks2x,
+    Explorer3x,
+    Custom
+}
+
+/// <summary>
 /// Configuracion autoritativa del servidor para Fauna QoL, tamanos de stack y politicas de inventario/contenedores.
 /// </summary>
 public sealed class SeraphQoLServerConfig
@@ -42,6 +54,10 @@ public sealed class SeraphQoLServerConfig
     public const int MaxSingleItemMaxStack = 256;
     public const int MinStackSizeCapValue = 16;
     public const int MaxStackSizeCapValue = 20000;
+    public const double MinBackpackMultiplier = 0.5;
+    public const double MaxBackpackMultiplier = 8.0;
+    public const int MinBackpackSlotsCapValue = 8;
+    public const int MaxBackpackSlotsCapValue = 256;
     public const int MinStoreNearbyRadius = 1;
     public const int MaxStoreNearbyRadius = 16;
 
@@ -95,6 +111,20 @@ public sealed class SeraphQoLServerConfig
 
     public HashSet<string> StackSizeBlacklist { get; set; } = new(StringComparer.OrdinalIgnoreCase);
     public Dictionary<string, int> StackSizeOverrides { get; set; } = new(StringComparer.OrdinalIgnoreCase);
+
+    // Capacidad de Mochilas y Alforjas (Server Authoritative)
+    [JsonConverter(typeof(StringEnumConverter))]
+    public BackpackPreset BackpackPreset { get; set; } = BackpackPreset.Vanilla;
+    public bool EnableBackpackExpansion { get; set; } = false;
+    public double GlobalBackpackMultiplier { get; set; } = 1.0;
+    public double StandardBackpacksMultiplier { get; set; } = 1.0;
+    public double SpecializedBagsMultiplier { get; set; } = 1.0;
+    public double SaddlebagsMultiplier { get; set; } = 1.0;
+    public double ModdedBackpacksMultiplier { get; set; } = 1.0;
+    public int MaxBackpackSlotsCap { get; set; } = 64;
+
+    public HashSet<string> BackpackBlacklist { get; set; } = new(StringComparer.OrdinalIgnoreCase);
+    public Dictionary<string, int> BackpackOverrides { get; set; } = new(StringComparer.OrdinalIgnoreCase);
 
     public bool ApplyPreset(FaunaPreset preset)
     {
@@ -291,6 +321,80 @@ public sealed class SeraphQoLServerConfig
         return StackSizePreset.Custom;
     }
 
+    public bool ApplyBackpackPreset(BackpackPreset preset)
+    {
+        BackpackPreset = preset;
+        switch (preset)
+        {
+            case BackpackPreset.Vanilla:
+                EnableBackpackExpansion = false;
+                GlobalBackpackMultiplier = 1.0;
+                StandardBackpacksMultiplier = 1.0;
+                SpecializedBagsMultiplier = 1.0;
+                SaddlebagsMultiplier = 1.0;
+                ModdedBackpacksMultiplier = 1.0;
+                MaxBackpackSlotsCap = 64;
+                return true;
+
+            case BackpackPreset.Balanced15x:
+                EnableBackpackExpansion = true;
+                GlobalBackpackMultiplier = 1.0;
+                StandardBackpacksMultiplier = 1.5;
+                SpecializedBagsMultiplier = 1.5;
+                SaddlebagsMultiplier = 1.5;
+                ModdedBackpacksMultiplier = 1.5;
+                MaxBackpackSlotsCap = 48;
+                return true;
+
+            case BackpackPreset.BiggerBackpacks2x:
+                EnableBackpackExpansion = true;
+                GlobalBackpackMultiplier = 1.0;
+                StandardBackpacksMultiplier = 2.0;
+                SpecializedBagsMultiplier = 2.0;
+                SaddlebagsMultiplier = 2.0;
+                ModdedBackpacksMultiplier = 2.0;
+                MaxBackpackSlotsCap = 64;
+                return true;
+
+            case BackpackPreset.Explorer3x:
+                EnableBackpackExpansion = true;
+                GlobalBackpackMultiplier = 1.0;
+                StandardBackpacksMultiplier = 3.0;
+                SpecializedBagsMultiplier = 3.0;
+                SaddlebagsMultiplier = 3.0;
+                ModdedBackpacksMultiplier = 3.0;
+                MaxBackpackSlotsCap = 96;
+                return true;
+
+            case BackpackPreset.Custom:
+                return true;
+
+            default:
+                return false;
+        }
+    }
+
+    public BackpackPreset DetectMatchingBackpackPreset()
+    {
+        foreach (BackpackPreset candidate in new[]
+        {
+            BackpackPreset.Vanilla,
+            BackpackPreset.Balanced15x,
+            BackpackPreset.BiggerBackpacks2x,
+            BackpackPreset.Explorer3x
+        })
+        {
+            var probe = new SeraphQoLServerConfig();
+            probe.ApplyBackpackPreset(candidate);
+            if (MatchesBackpackValues(probe))
+            {
+                return candidate;
+            }
+        }
+
+        return BackpackPreset.Custom;
+    }
+
     public IReadOnlyList<(string Key, object Value)> GetFaunaPresetEntries(bool includePresetKey = false)
     {
         var list = new List<(string Key, object Value)>(12);
@@ -335,6 +439,24 @@ public sealed class SeraphQoLServerConfig
         return list;
     }
 
+    public IReadOnlyList<(string Key, object Value)> GetBackpackPresetEntries(bool includePresetKey = false)
+    {
+        var list = new List<(string Key, object Value)>(8);
+        if (includePresetKey)
+        {
+            list.Add((nameof(BackpackPreset), BackpackPreset.ToString()));
+        }
+
+        list.Add((nameof(EnableBackpackExpansion), EnableBackpackExpansion));
+        list.Add((nameof(GlobalBackpackMultiplier), (float)GlobalBackpackMultiplier));
+        list.Add((nameof(StandardBackpacksMultiplier), (float)StandardBackpacksMultiplier));
+        list.Add((nameof(SpecializedBagsMultiplier), (float)SpecializedBagsMultiplier));
+        list.Add((nameof(SaddlebagsMultiplier), (float)SaddlebagsMultiplier));
+        list.Add((nameof(ModdedBackpacksMultiplier), (float)ModdedBackpacksMultiplier));
+        list.Add((nameof(MaxBackpackSlotsCap), MaxBackpackSlotsCap));
+        return list;
+    }
+
     public void SyncConfigSettingsFrom(SeraphQoLServerConfig source)
     {
         FaunaPreset = source.FaunaPreset;
@@ -367,6 +489,14 @@ public sealed class SeraphQoLServerConfig
         FurnitureUtilityMaxStack = source.FurnitureUtilityMaxStack;
         ClothingMaxStack = source.ClothingMaxStack;
         MaxStackSizeCap = source.MaxStackSizeCap;
+        BackpackPreset = source.BackpackPreset;
+        EnableBackpackExpansion = source.EnableBackpackExpansion;
+        GlobalBackpackMultiplier = source.GlobalBackpackMultiplier;
+        StandardBackpacksMultiplier = source.StandardBackpacksMultiplier;
+        SpecializedBagsMultiplier = source.SpecializedBagsMultiplier;
+        SaddlebagsMultiplier = source.SaddlebagsMultiplier;
+        ModdedBackpacksMultiplier = source.ModdedBackpacksMultiplier;
+        MaxBackpackSlotsCap = source.MaxBackpackSlotsCap;
         Normalize();
     }
 
@@ -390,6 +520,13 @@ public sealed class SeraphQoLServerConfig
         FurnitureUtilityMaxStack = Math.Clamp(FurnitureUtilityMaxStack, MinSingleItemMaxStack, MaxSingleItemMaxStack);
         ClothingMaxStack = Math.Clamp(ClothingMaxStack, MinSingleItemMaxStack, MaxSingleItemMaxStack);
         MaxStackSizeCap = Math.Clamp(MaxStackSizeCap, MinStackSizeCapValue, MaxStackSizeCapValue);
+
+        GlobalBackpackMultiplier = ClampBackpackMultiplier(GlobalBackpackMultiplier);
+        StandardBackpacksMultiplier = ClampBackpackMultiplier(StandardBackpacksMultiplier);
+        SpecializedBagsMultiplier = ClampBackpackMultiplier(SpecializedBagsMultiplier);
+        SaddlebagsMultiplier = ClampBackpackMultiplier(SaddlebagsMultiplier);
+        ModdedBackpacksMultiplier = ClampBackpackMultiplier(ModdedBackpacksMultiplier);
+        MaxBackpackSlotsCap = Math.Clamp(MaxBackpackSlotsCap, MinBackpackSlotsCapValue, MaxBackpackSlotsCapValue);
     }
 
     public bool ApplySetting(string? code, IAttribute? valueAttr)
@@ -420,8 +557,20 @@ public sealed class SeraphQoLServerConfig
             return parsed;
         }
 
+        if (string.Equals(code, nameof(BackpackPreset), StringComparison.Ordinal))
+        {
+            bool parsed = ConfigValueParser.TryEnum<BackpackPreset>(raw, v =>
+            {
+                if (v == BackpackPreset.Custom) BackpackPreset = BackpackPreset.Custom;
+                else ApplyBackpackPreset(v);
+            });
+            if (parsed) Normalize();
+            return parsed;
+        }
+
         bool isFaunaProperty = false;
         bool isStackProperty = false;
+        bool isBackpackProperty = false;
         bool applied = code switch
         {
             nameof(EnableFaunaRebalance) => MarkGroup(ConfigValueParser.TryBool(raw, v => EnableFaunaRebalance = v), ref isFaunaProperty),
@@ -452,6 +601,13 @@ public sealed class SeraphQoLServerConfig
             nameof(FurnitureUtilityMaxStack) => MarkGroup(ConfigValueParser.TryInt(raw, v => FurnitureUtilityMaxStack = v), ref isStackProperty),
             nameof(ClothingMaxStack) => MarkGroup(ConfigValueParser.TryInt(raw, v => ClothingMaxStack = v), ref isStackProperty),
             nameof(MaxStackSizeCap) => MarkGroup(ConfigValueParser.TryInt(raw, v => MaxStackSizeCap = v), ref isStackProperty),
+            nameof(EnableBackpackExpansion) => MarkGroup(ConfigValueParser.TryBool(raw, v => EnableBackpackExpansion = v), ref isBackpackProperty),
+            nameof(GlobalBackpackMultiplier) => MarkGroup(ConfigValueParser.TryDouble(raw, v => GlobalBackpackMultiplier = v), ref isBackpackProperty),
+            nameof(StandardBackpacksMultiplier) => MarkGroup(ConfigValueParser.TryDouble(raw, v => StandardBackpacksMultiplier = v), ref isBackpackProperty),
+            nameof(SpecializedBagsMultiplier) => MarkGroup(ConfigValueParser.TryDouble(raw, v => SpecializedBagsMultiplier = v), ref isBackpackProperty),
+            nameof(SaddlebagsMultiplier) => MarkGroup(ConfigValueParser.TryDouble(raw, v => SaddlebagsMultiplier = v), ref isBackpackProperty),
+            nameof(ModdedBackpacksMultiplier) => MarkGroup(ConfigValueParser.TryDouble(raw, v => ModdedBackpacksMultiplier = v), ref isBackpackProperty),
+            nameof(MaxBackpackSlotsCap) => MarkGroup(ConfigValueParser.TryInt(raw, v => MaxBackpackSlotsCap = v), ref isBackpackProperty),
             _ => false
         };
 
@@ -465,6 +621,10 @@ public sealed class SeraphQoLServerConfig
             if (isStackProperty)
             {
                 StackSizePreset = DetectMatchingStackPreset();
+            }
+            if (isBackpackProperty)
+            {
+                BackpackPreset = DetectMatchingBackpackPreset();
             }
         }
 
@@ -497,6 +657,15 @@ public sealed class SeraphQoLServerConfig
         && ClothingMaxStack == other.ClothingMaxStack
         && MaxStackSizeCap == other.MaxStackSizeCap;
 
+    private bool MatchesBackpackValues(SeraphQoLServerConfig other) =>
+        EnableBackpackExpansion == other.EnableBackpackExpansion
+        && ApproxEqual(GlobalBackpackMultiplier, other.GlobalBackpackMultiplier)
+        && ApproxEqual(StandardBackpacksMultiplier, other.StandardBackpacksMultiplier)
+        && ApproxEqual(SpecializedBagsMultiplier, other.SpecializedBagsMultiplier)
+        && ApproxEqual(SaddlebagsMultiplier, other.SaddlebagsMultiplier)
+        && ApproxEqual(ModdedBackpacksMultiplier, other.ModdedBackpacksMultiplier)
+        && MaxBackpackSlotsCap == other.MaxBackpackSlotsCap;
+
     private static bool ApproxEqual(double a, double b) => Math.Abs(a - b) < 0.001;
 
     private static bool MarkGroup(bool result, ref bool groupFlag)
@@ -514,4 +683,9 @@ public sealed class SeraphQoLServerConfig
         double.IsNaN(value) || double.IsInfinity(value)
             ? 1.0
             : Math.Clamp(value, MinStackMultiplier, MaxStackMultiplier);
+
+    private static double ClampBackpackMultiplier(double value) =>
+        double.IsNaN(value) || double.IsInfinity(value)
+            ? 1.0
+            : Math.Clamp(value, MinBackpackMultiplier, MaxBackpackMultiplier);
 }
