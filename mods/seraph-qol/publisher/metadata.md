@@ -24,13 +24,15 @@
 
 - [x] `publisher/description.html` (HTML TinyMCE-safe actualizado sin `Alt+O`, `/seraphqol` ni `/worldconfig`)
 - [x] `publisher/images/modicon.png` (`256x256` PNG — enlazado a raíz del `.zip`)
+- [x] `publisher/images/moddb-logo.jpg` (`480x480` JPG — ModDB Logo)
+- [x] `publisher/images/external-logo.jpg` (`480x320` JPG — External Logo / social embeds)
 - [x] `publisher/images/icon.jpg` (`1024x1024` JPG)
 - [x] `publisher/images/cover.jpg` (`1376x768` JPG)
 - [ ] `publisher/screenshots/` (capturas de botones de inventario, radiales, calculadora de aleaciones y barras de vida)
 
 ## URLs y Placeholders pendientes antes de publicar
 
-- Reemplazar `#SERAPH_UI_MODDB_URL` en `publisher/description.html` por la URL publicada de **Seraph UI**.
+- **Dependencia Seraph UI (ModDB):** `https://mods.vintagestory.at/seraphui`
 - **URL ModDB asignada:** `TBD`
 - **Repositorio / Source URL:** `TBD`
 

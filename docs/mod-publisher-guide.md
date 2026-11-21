@@ -17,8 +17,10 @@ mods/<mod>/
     ├── metadata.md               # Ficha de metadatos, tags, enlaces y checklist de publicación
     ├── images/
     │   ├── modicon.png           # Ícono del gestor de mods in-game (256x256 PNG)
-    │   ├── icon.jpg              # Ícono/tarjeta cuadrada de ModDB (1024x1024 JPG/PNG)
-    │   └── cover.jpg             # Portada / banner de ModDB (1376x768 o 16:9 JPG/PNG)
+    │   ├── moddb-logo.jpg        # ModDB Logo image (exacto 480x480 px, subir a Screenshots y elegir como ModDB Logo)
+    │   ├── external-logo.jpg     # External Logo image (exacto 480x320 px, subir a Screenshots para embeds sociales)
+    │   ├── icon.jpg              # Ícono/tarjeta cuadrada fuente (1024x1024 JPG/PNG)
+    │   └── cover.jpg             # Portada / banner fuente (1376x768 o 16:9 JPG/PNG)
     └── screenshots/
         ├── README.md             # Lista de capturas recomendadas para ese mod
         └── *.png / *.jpg         # Capturas limpias dentro del juego
@@ -65,7 +67,10 @@ Todo mod debe tener completos y revisados los siguientes campos antes de publica
    - Debe residir en la **raíz del `.zip`** (al lado de `modinfo.json`) y referenciarse con `"iconPath": "modicon.png"` en `modinfo.json`.
    - En el `.csproj`, vincular `publisher\images\modicon.png` con `<Link>modicon.png</Link>` y `<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>` para no incluir el resto de `publisher/` dentro del `.zip`.
    - Formato recomendado: PNG `256x256` px, fondo opaco o silueta legible incluso a tamaño reducido en el menú de mods.
-2. **Template HTML de ModDB (`publisher/description.html`)**:
+2. **Logos en ModDB (`moddb-logo.jpg` y `external-logo.jpg`)**:
+   - ModDB exige que tanto **ModDB Logo image** (tarjeta del mod) como **External Logo image** (embeds en redes sociales/Discord) se seleccionen desde **Screenshots** y midan exactamente **`480x480`** o **`480x320`** px (las imágenes elegidas como logo no se muestran en el slideshow).
+   - Si no se elige un External Logo dedicado, ModDB recorta los `480x320` px superiores del ModDB Logo. Por eso cada mod mantiene `moddb-logo.jpg` (`480x480`) y `external-logo.jpg` (`480x320`).
+3. **Template HTML de ModDB (`publisher/description.html`)**:
    - Usar **100% CSS inline** compatible con TinyMCE (`mods.vintagestory.at` -> *Source code `<>`*); evitar `<style>`, `<script>` o clases externas.
    - Mantener idioma **inglés** en el HTML público de ModDB, con la paleta retro de Vintage Story (`#4a3b2c`, `#31261c`, `#534231`, bordes biselados).
    - No documentar comandos o atajos inexistentes o retirados; mantener sincronía exacta con `assets/<modid>/lang/*.json` y `configlib-patches.json`.
