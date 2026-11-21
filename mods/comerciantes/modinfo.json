@@ -5,7 +5,7 @@
   "authors": [
     "FrovaHappy"
   ],
-  "description": "Sistema economico dinamico para comerciantes: afinidades por tipo, demanda diaria, anti-farmeo, valoracion transparente y directorio global. Impulsado con IA · Hecho en Argentina.",
+  "description": "Sistema economico dinamico para comerciantes: afinidades por tipo, demanda diaria, anti-farmeo, valoracion transparente y directorio global. Etapa temprana de desarrollo: puede contener bugs. Impulsado con IA · Hecho en Argentina.",
   "version": "0.1.0",
   "side": "Universal",
   "iconPath": "modicon.png",

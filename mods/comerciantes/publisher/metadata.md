@@ -6,6 +6,7 @@
 - **Autor:** `FrovaHappy`
 - **Origen / Desarrollo:** Impulsado con IA · Hecho en Argentina
 - **Versión actual:** `0.1.0`
+- **Estado de desarrollo:** Etapa temprana de desarrollo (puede contener bugs)
 - **Lado (`Side`):** `Universal`
 - **Versión de Vintage Story:** `1.22.0`
 - **Categoría sugerida:** Economy / Gameplay
