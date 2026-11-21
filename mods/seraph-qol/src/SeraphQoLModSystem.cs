@@ -410,11 +410,14 @@ public sealed class SeraphQoLModSystem : ModSystem
 
         bool isPlayerSlots = SlotProtectionPolicy.IsPlayerBackpack(inventory)
             || SlotProtectionPolicy.IsPlayerHotbar(inventory);
-        bool showFavorites = isPlayerSlots && (Favorites.IsFavoriteModeActive || !ClientConfig.HideFavoritesOverlay);
-        bool showLocks = isPlayerSlots && (LockedSlots.IsLockModeActive || !ClientConfig.HideLockedSlotOverlay);
+        bool favoriteModeActive = Favorites.IsFavoriteModeActive;
+        bool lockModeActive = LockedSlots.IsLockModeActive;
+        bool showFavorites = isPlayerSlots && (favoriteModeActive || !ClientConfig.HideFavoritesOverlay);
+        bool showLocks = isPlayerSlots && (lockModeActive || !ClientConfig.HideLockedSlotOverlay);
+        bool showInactiveHatch = isPlayerSlots && (favoriteModeActive || lockModeActive);
         bool showMatching = ClientConfig.EnableMatchingItemHighlight && !string.IsNullOrWhiteSpace(hoveredCode);
 
-        if (!showFavorites && !showLocks && !showMatching) return;
+        if (!showFavorites && !showLocks && !showMatching && !showInactiveHatch) return;
 
         string invClass = inventory.ClassName ?? string.Empty;
         int visualIndex = 0;
@@ -424,6 +427,19 @@ public sealed class SeraphQoLModSystem : ModSystem
             ElementBounds slotBounds = grid.SlotBounds[visualIndex++];
             int slotId = entry.Key;
             ItemSlot slot = entry.Value;
+
+            bool isFav = showFavorites && !slot.Empty && FavoritesManager.IsFavorite(player, slot.Itemstack);
+            bool isLocked = showLocks && ClientConfig.IsSlotLocked(invClass, slotId);
+
+            if (SlotSelectorOverlayPolicy.ShouldDrawInactiveHatch(
+                    isPlayerSlots,
+                    favoriteModeActive,
+                    lockModeActive,
+                    isFav,
+                    isLocked))
+            {
+                _buttonsComposer.DrawInactiveSlotHatch(slotBounds);
+            }
 
             if (showMatching && !slot.Empty)
             {
@@ -435,9 +451,6 @@ public sealed class SeraphQoLModSystem : ModSystem
             }
 
             if (!isPlayerSlots) continue;
-
-            bool isFav = showFavorites && !slot.Empty && FavoritesManager.IsFavorite(player, slot.Itemstack);
-            bool isLocked = showLocks && ClientConfig.IsSlotLocked(invClass, slotId);
 
             if (isFav || isLocked)
             {

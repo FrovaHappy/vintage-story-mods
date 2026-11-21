@@ -102,3 +102,22 @@ public static class SlotIndicatorPlanner
         return SlotIndicatorResult.None;
     }
 }
+
+/// <summary>
+/// Regla pura para mostrar un rallado diagonal sobre casillas inactivas cuando el selector de favoritos o bloqueo esta activo.
+/// </summary>
+public static class SlotSelectorOverlayPolicy
+{
+    public static bool ShouldDrawInactiveHatch(
+        bool isPlayerSlot,
+        bool isFavoriteModeActive,
+        bool isLockModeActive,
+        bool isFavorite,
+        bool isLocked)
+    {
+        if (!isPlayerSlot) return false;
+        if (isFavoriteModeActive) return !isFavorite;
+        if (isLockModeActive) return !isLocked;
+        return false;
+    }
+}

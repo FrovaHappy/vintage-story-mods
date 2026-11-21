@@ -7,6 +7,7 @@ Este documento define el flujo de trabajo y los principios obligatorios para dis
 ## 1. Contexto del Monorepo
 
 - **Lenguaje / Runtime**: C# (`.NET 10.0`, `Nullable` habilitado) sobre la API de Vintage Story (`VintagestoryAPI`, `VSEssentials`, `VSSurvivalMod`, `0Harmony`, `protobuf-net`, `Newtonsoft.Json`, `cairo-sharp`).
+- **Idioma en código**: todos los identificadores en código (clases, métodos, propiedades, campos, parámetros, variables locales, constantes, claves JSON/config) deben escribirse **siempre en inglés**.
 - **Proyectos activos**:
   - `mods/system-ui` (`seraphui`): librería visual reutilizable (cliente) basada en `UiDialogBase`, `UiRichTextBuilder`, `UiComposerExtensions` y `SystemUITheme`.
   - `mods/comerciantes` (`tradersoverhaul`): motor económico, sincronización cliente/servidor, parches Harmony e integración con ConfigLib e i18n (`en`, `es-es`, `es-419`, `ru`).
@@ -51,7 +52,7 @@ El proceso de desarrollo crece de forma **proporcional y orgánica** según la c
    - **Documentación en template al añadir features**: toda nueva feature (o cambio/retiro visible para el jugador) debe quedar documentada en `mods/<mod>/publisher/description.html` y `mods/<mod>/publisher/metadata.md` (y en `publisher/screenshots/` si modifica la UI), conforme a [`docs/mod-publisher-guide.md`](docs/mod-publisher-guide.md).
 4. **Fase 4 — Verify (Verificación y Cierre)**:
    - Ejecutar `dotnet test VintageStoryMods.sln --no-restore -m:1` y `scripts/package-mods.ps1 -BuildOnly` tras la última edición.
-   - Confirmar cumplimiento de **Zero Dead Code**, marcar las tareas completadas en `odd/tasks/{feature-slug}.md` (si aplica) y reportar resultados exactos.
+   - Confirmar cumplimiento de **Zero Dead Code**, actualizar `mods/<mod>/changelogs/unreleased.md` en cada mod afectado si hubo cambios funcionales/UI/config/fix relevantes, marcar las tareas completadas en `odd/tasks/{feature-slug}.md` (si aplica) y reportar resultados exactos.
    - **Control del usuario**: acciones como `git commit`, `git push`, creación de PRs o merges quedan siempre bajo decisión explícita del usuario.
 
 ### Plantilla mínima para `odd/tasks/{feature-slug}.md`
@@ -124,7 +125,42 @@ El repositorio debe mantenerse libre de código, assets o configuraciones sin us
 
 ---
 
-## 6. Checklist antes de dar por terminada una tarea
+## 6. Registro de Cambios por Mod (Changelog / Release Notes)
+
+El registro de cambios de cada mod (`mods/system-ui`, `mods/comerciantes`, `mods/seraph-qol`) sigue **[Keep a Changelog 1.1.0](https://keepachangelog.com/en/1.1.0/)** y **Semantic Versioning (`MAJOR.MINOR.PATCH`)**, alineado con la propiedad `version` de su `modinfo.json` y su ficha en `mods/<mod>/publisher/metadata.md`.
+
+### Estructura Modular por Mod (*Zero Monolithic Changelog*)
+- No mantener un changelog global en la raíz del repositorio ni un único `CHANGELOG.md` monolítico infinito.
+- Cada mod gestiona sus propios cambios en `mods/<mod>/changelogs/`:
+  - Los cambios en desarrollo residen **exclusivamente** en `mods/<mod>/changelogs/unreleased.md`.
+  - Al congelar una versión de un mod para publicar en ModDB / GitHub Releases, renombrar o mover sus entradas a `mods/<mod>/changelogs/v{VERSION}.md` (p. ej. `mods/seraph-qol/changelogs/v0.1.0.md`) con encabezado `# Release v{VERSION} (YYYY-MM-DD)` y reiniciar `mods/<mod>/changelogs/unreleased.md`.
+
+### Categorías Estándar
+Clasificar cada entrada en `mods/<mod>/changelogs/unreleased.md` bajo la sección que corresponda (omitir secciones vacías):
+- `### Added`: nuevas funcionalidades, mecánicas, elementos de UI o configuraciones.
+- `### Changed`: modificaciones a funcionalidades existentes, ajustes de balance, UI o refactors con impacto observable.
+- `### Deprecated`: opciones o comportamientos marcados para retiro en próximas versiones.
+- `### Removed`: funcionalidades, configuraciones o código obsoleto retirado (*Zero Dead Code*).
+- `### Fixed`: corrección de errores, desincronizaciones cliente/servidor o fallos visuales.
+- `### Security`: correcciones de validación o seguridad (p. ej. validación autoritativa en servidor).
+
+### Estilo de Redacción (Siempre en inglés, máximo 1 línea por ítem)
+- Todas las entradas de `mods/<mod>/changelogs/*.md` deben escribirse **siempre en inglés** (alineado con ModDB y GitHub Releases).
+- Entradas directas, compactas y orientadas a humanos, sin explicaciones técnicas redundantes.
+- **Formato**: `- **<Short title> (`<Component>`)**: <concise single-sentence description>.`
+- **Ejemplo**:
+  - ✅ `- **Inventory selector hatching (`InventoryButtonsComposer`)**: Warm brown/bronze diagonal hatch on inactive slots while Favorite or Lock mode is active, syncing both toggle buttons.`
+  - ❌ Evitar párrafos largos o detalles internos de implementación línea por línea.
+
+### Flujo durante el Desarrollo
+1. Al concluir una feature, mejora visible, cambio de balance/configuración o fix relevante en un mod, verificar `mods/<mod>/changelogs/unreleased.md` y añadir una viñeta concisa en la categoría correspondiente.
+2. Si un cambio toca varios mods (p. ej. `system-ui` y `seraph-qol`), registrar la entrada correspondiente en el `changelogs/unreleased.md` de cada mod afectado.
+3. Mantener cada `unreleased.md` limpio eliminando secciones que queden vacías.
+4. En **Fase 4 (`Verify`)**, comprobar que `mods/<mod>/changelogs/unreleased.md` acompañe a las actualizaciones de `mods/<mod>/publisher/description.html` y `metadata.md` cuando el cambio sea visible para el jugador.
+
+---
+
+## 7. Checklist antes de dar por terminada una tarea
 
 1. **ODD**: si la tarea fue sustancial/multi-módulo, ¿quedó registrada y actualizada en `odd/tasks/{feature-slug}.md` antes de escribir código?
 2. **Arquitectura y SOLID**: ¿las reglas de dominio están aisladas de parches Harmony, red y GUI, con responsabilidades claras y sin duplicación?
@@ -132,4 +168,5 @@ El repositorio debe mantenerse libre de código, assets o configuraciones sin us
 4. **Zero Dead Code**: ¿se eliminaron archivos, métodos, campos, `using`, claves `lang`, entradas de ConfigLib y pruebas obsoletas?
 5. **Localización**: si hubo textos visibles para el jugador, ¿están en `en`, `es-es`, `es-419` y `ru` y validados por `LocalizationTests`?
 6. **Publicación y Templates (`publisher/`)**: si se añadió o modificó una feature visible para el jugador, ¿se actualizó `mods/<mod>/publisher/description.html` y `metadata.md` según [`docs/mod-publisher-guide.md`](docs/mod-publisher-guide.md), y el mod conserva `modicon.png` + `iconPath` en `modinfo.json`?
-7. **Verificación**: ¿pasan `dotnet test VintageStoryMods.sln --no-restore -m:1` y `pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/package-mods.ps1 -BuildOnly` sin errores ni advertencias?
+7. **Changelog (`mods/<mod>/changelogs/unreleased.md`)**: si hubo cambios funcionales, de UI, balance, configuración o fixes relevantes, ¿quedaron registrados de forma concisa y **en inglés** en el `unreleased.md` de cada mod afectado?
+8. **Verificación**: ¿pasan `dotnet test VintageStoryMods.sln --no-restore -m:1` y `pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/package-mods.ps1 -BuildOnly` sin errores ni advertencias?

@@ -12,15 +12,17 @@ param(
     [switch]$Interactive,
     [switch]$Force,
     [ValidateSet("Debug", "Release")]
-    [string]$Configuration = "Release"
+    [string]$Configuration = "Release",
+    [string[]]$Mods = @()
 )
 
 $ErrorActionPreference = "Stop"
 Add-Type -AssemblyName System.IO.Compression.FileSystem
 
 $repoRoot = Split-Path -Parent $PSScriptRoot
-$vsDir = if ($env:VINTAGE_STORY) { $env:VINTAGE_STORY } else { Join-Path $env:APPDATA "Vintagestory" }
-$vsDataDir = if ($env:VINTAGE_STORY_DATA) { $env:VINTAGE_STORY_DATA } else { Join-Path $env:APPDATA "VintagestoryData" }
+$defaultAppData = if ($env:APPDATA) { $env:APPDATA } elseif ($env:HOME) { Join-Path $env:HOME ".config" } else { $repoRoot }
+$vsDir = if ($env:VINTAGE_STORY) { $env:VINTAGE_STORY } else { Join-Path $defaultAppData "Vintagestory" }
+$vsDataDir = if ($env:VINTAGE_STORY_DATA) { $env:VINTAGE_STORY_DATA } else { Join-Path $defaultAppData "VintagestoryData" }
 $vsDataMods = Join-Path $vsDataDir "Mods"
 $clientSettingsPath = Join-Path $vsDataDir "clientsettings.json"
 $backupPath = Join-Path $vsDataDir "clientsettings.disabledMods.backup.json"
@@ -42,7 +44,7 @@ function Assert-GameNotRunning {
 }
 
 function Load-Newtonsoft {
-    $newtonDll = Join-Path $vsDir "Lib\Newtonsoft.Json.dll"
+    $newtonDll = [System.IO.Path]::Combine($vsDir, "Lib", "Newtonsoft.Json.dll")
     if (-not (Test-Path $newtonDll)) {
         throw "No se encontro Newtonsoft.Json.dll en: $newtonDll"
     }
@@ -137,14 +139,25 @@ function Update-DisabledMods([scriptblock]$transform) {
     [System.IO.File]::WriteAllText($clientSettingsPath, $root.ToString([Newtonsoft.Json.Formatting]::Indented), $utf8NoBom)
 }
 
-function Invoke-BuildAndPackage([bool]$deployToUserMods, [string]$config) {
-    $mods = @(
-        @{ Name = "seraphui"; OutDir = Join-Path $repoRoot "mods\system-ui\bin\$config\net10.0" },
-        @{ Name = "tradersoverhaul"; OutDir = Join-Path $repoRoot "mods\comerciantes\bin\$config\net10.0" },
-        @{ Name = "seraphqol"; OutDir = Join-Path $repoRoot "mods\seraph-qol\bin\$config\net10.0" }
+function Invoke-BuildAndPackage([bool]$deployToUserMods, [string]$config, [string[]]$selectedMods) {
+    $allMods = @(
+        @{ Name = "seraphui"; OutDir = [System.IO.Path]::Combine($repoRoot, "mods", "system-ui", "bin", $config, "net10.0") },
+        @{ Name = "tradersoverhaul"; OutDir = [System.IO.Path]::Combine($repoRoot, "mods", "comerciantes", "bin", $config, "net10.0") },
+        @{ Name = "seraphqol"; OutDir = [System.IO.Path]::Combine($repoRoot, "mods", "seraph-qol", "bin", $config, "net10.0") }
     )
 
-    foreach ($mod in $mods) {
+    $normalizedFilter = @($selectedMods | ForEach-Object { $_.Split(",") } | ForEach-Object { $_.Trim().ToLowerInvariant() } | Where-Object { $_ })
+    $mods = if ($normalizedFilter.Count -gt 0) {
+        @($allMods | Where-Object { $normalizedFilter -contains $_.Name })
+    } else {
+        $allMods
+    }
+
+    if ($mods.Count -eq 0) {
+        throw "No se seleccionaron mods validos para empaquetar."
+    }
+
+    foreach ($mod in $allMods) {
         if (Test-Path $mod.OutDir) {
             Remove-Item $mod.OutDir -Recurse -Force
         }
@@ -388,7 +401,7 @@ function Show-CliMenu {
                     switch ($current.Key) {
                         "Apply" {
                             if ($optBuild) {
-                                Invoke-BuildAndPackage -deployToUserMods $optDeploy -config $configName
+                                Invoke-BuildAndPackage -deployToUserMods $optDeploy -config $configName -selectedMods $Mods
                             } elseif ($optDeploy) {
                                 foreach ($zipName in $ownZipNames) {
                                     $src = Join-Path $distDir $zipName
@@ -446,7 +459,7 @@ if ($Interactive -or -not $hasActionSwitch) {
 }
 
 if ($BuildOnly -or $DeployToGame) {
-    Invoke-BuildAndPackage -deployToUserMods ([bool]$DeployToGame) -config $Configuration
+    Invoke-BuildAndPackage -deployToUserMods ([bool]$DeployToGame) -config $Configuration -selectedMods $Mods
 }
 
 if ($IsolateMods) {

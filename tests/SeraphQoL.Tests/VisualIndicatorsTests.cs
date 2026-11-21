@@ -232,4 +232,34 @@ public sealed class VisualIndicatorsTests
         state.Reset();
         Assert.False(state.IsEntityVisible(entityId: 20, lookedAtEntityId: null, alwaysShow: false, nowMs: 4000, lingerSeconds: 2.5));
     }
+
+    [Fact]
+    public void SlotSelectorOverlayPolicy_DrawsInactiveHatchOnlyOnUnmarkedPlayerSlotsWhenSelectorActive()
+    {
+        // Inactive when neither selector mode is active
+        Assert.False(SlotSelectorOverlayPolicy.ShouldDrawInactiveHatch(
+            isPlayerSlot: true, isFavoriteModeActive: false, isLockModeActive: false, isFavorite: false, isLocked: false));
+
+        // Never drawn on non-player grids (chests, crafting, etc.)
+        Assert.False(SlotSelectorOverlayPolicy.ShouldDrawInactiveHatch(
+            isPlayerSlot: false, isFavoriteModeActive: true, isLockModeActive: false, isFavorite: false, isLocked: false));
+        Assert.False(SlotSelectorOverlayPolicy.ShouldDrawInactiveHatch(
+            isPlayerSlot: false, isFavoriteModeActive: false, isLockModeActive: true, isFavorite: false, isLocked: false));
+
+        // Favorite mode: hatch only slots without an active favorite mark (even if locked)
+        Assert.True(SlotSelectorOverlayPolicy.ShouldDrawInactiveHatch(
+            isPlayerSlot: true, isFavoriteModeActive: true, isLockModeActive: false, isFavorite: false, isLocked: false));
+        Assert.True(SlotSelectorOverlayPolicy.ShouldDrawInactiveHatch(
+            isPlayerSlot: true, isFavoriteModeActive: true, isLockModeActive: false, isFavorite: false, isLocked: true));
+        Assert.False(SlotSelectorOverlayPolicy.ShouldDrawInactiveHatch(
+            isPlayerSlot: true, isFavoriteModeActive: true, isLockModeActive: false, isFavorite: true, isLocked: false));
+
+        // Lock mode: hatch only unlocked slots (even if favorited)
+        Assert.True(SlotSelectorOverlayPolicy.ShouldDrawInactiveHatch(
+            isPlayerSlot: true, isFavoriteModeActive: false, isLockModeActive: true, isFavorite: false, isLocked: false));
+        Assert.True(SlotSelectorOverlayPolicy.ShouldDrawInactiveHatch(
+            isPlayerSlot: true, isFavoriteModeActive: false, isLockModeActive: true, isFavorite: true, isLocked: false));
+        Assert.False(SlotSelectorOverlayPolicy.ShouldDrawInactiveHatch(
+            isPlayerSlot: true, isFavoriteModeActive: false, isLockModeActive: true, isFavorite: false, isLocked: true));
+    }
 }

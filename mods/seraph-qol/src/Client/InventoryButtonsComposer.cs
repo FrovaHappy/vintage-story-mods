@@ -26,6 +26,7 @@ public sealed class InventoryButtonsComposer : IDisposable
     private LoadedTexture _favoriteBadgeTex;
     private LoadedTexture _lockBadgeTex;
     private LoadedTexture _matchingHighlightTex;
+    private LoadedTexture _inactiveSlotHatchTex;
     private bool _badgesLoaded;
 
     public InventoryButtonsComposer(ICoreClientAPI capi, SeraphQoLModSystem modSystem)
@@ -35,6 +36,7 @@ public sealed class InventoryButtonsComposer : IDisposable
         _favoriteBadgeTex = new LoadedTexture(capi);
         _lockBadgeTex = new LoadedTexture(capi);
         _matchingHighlightTex = new LoadedTexture(capi);
+        _inactiveSlotHatchTex = new LoadedTexture(capi);
     }
 
     public void ComposePlayerInventoryButtons(GuiComposer composer, IInventory backpackInventory)
@@ -73,7 +75,14 @@ public sealed class InventoryButtonsComposer : IDisposable
                 active =>
                 {
                     _modSystem.Favorites.IsFavoriteModeActive = active;
-                    if (active) _modSystem.LockedSlots.IsLockModeActive = false;
+                    if (active)
+                    {
+                        _modSystem.LockedSlots.IsLockModeActive = false;
+                        if (composer.GetElement("seraphqol-inv-lock") is SvgIconToggleButton lockBtn)
+                        {
+                            lockBtn.IsActive = false;
+                        }
+                    }
                 });
             cursorX -= Spacing;
 
@@ -85,7 +94,14 @@ public sealed class InventoryButtonsComposer : IDisposable
                 active =>
                 {
                     _modSystem.LockedSlots.IsLockModeActive = active;
-                    if (active) _modSystem.Favorites.IsFavoriteModeActive = false;
+                    if (active)
+                    {
+                        _modSystem.Favorites.IsFavoriteModeActive = false;
+                        if (composer.GetElement("seraphqol-inv-favorite") is SvgIconToggleButton favBtn)
+                        {
+                            favBtn.IsActive = false;
+                        }
+                    }
                 });
             cursorX -= Spacing;
 
@@ -204,19 +220,25 @@ public sealed class InventoryButtonsComposer : IDisposable
         _capi.Render.GLEnableDepthTest();
     }
 
-    public void DrawMatchingHighlight(ElementBounds slotBounds)
+    public void DrawMatchingHighlight(ElementBounds slotBounds) =>
+        DrawSlotOverlay(_matchingHighlightTex, slotBounds, 256f);
+
+    public void DrawInactiveSlotHatch(ElementBounds slotBounds) =>
+        DrawSlotOverlay(_inactiveSlotHatchTex, slotBounds, 252f);
+
+    private void DrawSlotOverlay(LoadedTexture texture, ElementBounds slotBounds, float z)
     {
         EnsureBadgeTextures();
-        if (_matchingHighlightTex.TextureId <= 0) return;
+        if (texture.TextureId <= 0) return;
 
         _capi.Render.GLDisableDepthTest();
         _capi.Render.Render2DTexturePremultipliedAlpha(
-            _matchingHighlightTex.TextureId,
+            texture.TextureId,
             (float)slotBounds.renderX,
             (float)slotBounds.renderY,
             (float)slotBounds.InnerWidth,
             (float)slotBounds.InnerHeight,
-            256f);
+            z);
         _capi.Render.GLEnableDepthTest();
     }
 
@@ -304,6 +326,7 @@ public sealed class InventoryButtonsComposer : IDisposable
             ref _lockBadgeTex);
 
         EnsureMatchingHighlightTexture();
+        EnsureInactiveSlotHatchTexture();
     }
 
     private void EnsureMatchingHighlightTexture()
@@ -326,10 +349,49 @@ public sealed class InventoryButtonsComposer : IDisposable
         _capi.Gui.LoadOrUpdateCairoTexture(surface, linearMag: true, ref _matchingHighlightTex);
     }
 
+    private void EnsureInactiveSlotHatchTexture()
+    {
+        const int texSize = 96;
+        const double inset = 4.0;
+        const double stripePeriod = 24.0;
+        const double stripeWidth = 8.5;
+
+        using var surface = new Cairo.ImageSurface(Cairo.Format.Argb32, texSize, texSize);
+        using var ctx = new Cairo.Context(surface);
+        ctx.Operator = Cairo.Operator.Clear;
+        ctx.Paint();
+        ctx.Operator = Cairo.Operator.Over;
+
+        // Lavado marron oscuro suave + franjas diagonales bronce apagado en paleta SeraphQoL
+        ctx.Rectangle(inset, inset, texSize - (inset * 2.0), texSize - (inset * 2.0));
+        ctx.SetSourceRGBA(0.09, 0.07, 0.05, 0.28);
+        ctx.FillPreserve();
+
+        ctx.Save();
+        ctx.Clip();
+        ctx.SetSourceRGBA(0.62, 0.50, 0.36, 0.34);
+        ctx.LineWidth = stripeWidth;
+        for (double offset = -texSize; offset <= texSize; offset += stripePeriod)
+        {
+            ctx.MoveTo(offset, 0);
+            ctx.LineTo(offset + texSize, texSize);
+        }
+        ctx.Stroke();
+        ctx.Restore();
+
+        ctx.Rectangle(inset, inset, texSize - (inset * 2.0), texSize - (inset * 2.0));
+        ctx.SetSourceRGBA(0.62, 0.50, 0.36, 0.42);
+        ctx.LineWidth = 2.0;
+        ctx.Stroke();
+
+        _capi.Gui.LoadOrUpdateCairoTexture(surface, linearMag: true, ref _inactiveSlotHatchTex);
+    }
+
     public void Dispose()
     {
         _favoriteBadgeTex.Dispose();
         _lockBadgeTex.Dispose();
         _matchingHighlightTex.Dispose();
+        _inactiveSlotHatchTex.Dispose();
     }
 }

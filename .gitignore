@@ -3,6 +3,7 @@ bin/
 obj/
 out/
 dist/
+release-assets/
 
 # Visual Studio / Rider / VS Code
 .vs/
@@ -19,3 +20,4 @@ Thumbs.db
 
 # Vintage Story logs and local data caches
 *.log
+.vs-sdk/
