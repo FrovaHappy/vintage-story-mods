@@ -25,7 +25,7 @@
 - [x] `publisher/images/external-logo.jpg` (`480x320` JPG — External Logo / social embeds)
 - [ ] `publisher/images/icon.jpg` (`1024x1024` — pendiente)
 - [ ] `publisher/images/cover.jpg` (`1376x768` — pendiente)
-- [ ] `publisher/screenshots/` (capturas de la ventana de comercio, tooltips y directorio)
+- [x] `publisher/screenshots/` (4 capturas añadidas: ventana de comercio, tasación detallada, directorio global y ConfigLib)
 
 ## URLs y Placeholders pendientes antes de publicar
 - **Dependencia Seraph UI (ModDB):** `https://mods.vintagestory.at/seraphui`
@@ -36,5 +36,5 @@
 - [x] `modinfo.json` con `iconPath: "modicon.png"`
 - [x] `Comerciantes.csproj` empaqueta `modicon.png` en la raíz del `.zip`
 - [ ] Generar `publisher/images/icon.jpg` y `publisher/images/cover.jpg`
-- [ ] Capturas limpias añadidas en `publisher/screenshots/`
+- [x] Capturas limpias añadidas en `publisher/screenshots/`
 - [ ] Prueba en juego con `-DeployToGame -IsolateMods`

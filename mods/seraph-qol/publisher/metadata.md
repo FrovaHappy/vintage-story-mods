@@ -28,7 +28,7 @@
 - [x] `publisher/images/external-logo.jpg` (`480x320` JPG — External Logo / social embeds)
 - [x] `publisher/images/icon.jpg` (`1024x1024` JPG)
 - [x] `publisher/images/cover.jpg` (`1376x768` JPG)
-- [ ] `publisher/screenshots/` (capturas de botones de inventario, radiales, calculadora de aleaciones y barras de vida)
+- [x] `publisher/screenshots/` (6 capturas añadidas: inventario, calculadora de aleaciones, menú radial, barras de vida e insignias, partículas y ConfigLib)
 
 ## URLs y Placeholders pendientes antes de publicar
 
@@ -40,5 +40,5 @@
 
 - [x] `modinfo.json` con `iconPath: "modicon.png"`
 - [x] `SeraphQoL.csproj` empaqueta `modicon.png` en la raíz del `.zip`
-- [ ] Capturas limpias añadidas en `publisher/screenshots/`
+- [x] Capturas limpias añadidas en `publisher/screenshots/`
 - [ ] Prueba en juego con `-DeployToGame -IsolateMods`
