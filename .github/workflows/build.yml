@@ -3,31 +3,39 @@ name: Build and Release
 on:
   workflow_dispatch:
     inputs:
-      release_seraphui:
-        description: 'Compilar y publicar Seraph UI (seraphui)'
-        required: false
-        type: boolean
-        default: false
-      release_tradersoverhaul:
-        description: 'Compilar y publicar Traders Overhaul (tradersoverhaul)'
-        required: false
-        type: boolean
-        default: false
-      release_seraphqol:
-        description: 'Compilar y publicar Seraph QoL (seraphqol)'
-        required: false
-        type: boolean
-        default: true
-      bump_type:
-        description: 'Tipo de versión a publicar'
+      seraphui:
+        description: 'Versión a publicar para Seraph UI (seraphui)'
         required: true
         type: choice
         options:
+          - none
           - major
           - minor
           - fix
           - dev
-        default: 'dev'
+        default: 'none'
+      tradersoverhaul:
+        description: 'Versión a publicar para Traders Overhaul (tradersoverhaul)'
+        required: true
+        type: choice
+        options:
+          - none
+          - major
+          - minor
+          - fix
+          - dev
+        default: 'none'
+      seraphqol:
+        description: 'Versión a publicar para Seraph QoL (seraphqol)'
+        required: true
+        type: choice
+        options:
+          - none
+          - major
+          - minor
+          - fix
+          - dev
+        default: 'none'
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -50,18 +58,18 @@ jobs:
         id: select
         run: |
           SELECTED=()
-          if [ "${{ github.event.inputs.release_seraphui }}" = "true" ]; then
+          if [ "${{ github.event.inputs.seraphui }}" != "none" ]; then
             SELECTED+=("seraphui")
           fi
-          if [ "${{ github.event.inputs.release_tradersoverhaul }}" = "true" ]; then
+          if [ "${{ github.event.inputs.tradersoverhaul }}" != "none" ]; then
             SELECTED+=("tradersoverhaul")
           fi
-          if [ "${{ github.event.inputs.release_seraphqol }}" = "true" ]; then
+          if [ "${{ github.event.inputs.seraphqol }}" != "none" ]; then
             SELECTED+=("seraphqol")
           fi
 
           if [ ${#SELECTED[@]} -eq 0 ]; then
-            echo "Error: debes seleccionar al menos un mod para compilar y publicar." >&2
+            echo "Error: debes seleccionar una versión distinta de 'none' en al menos un mod." >&2
             exit 1
           fi
 
@@ -143,8 +151,9 @@ jobs:
           set -euo pipefail
           MANIFEST="/tmp/release-manifest.json"
           node scripts/bump-mods.mjs \
-            --mods "${{ steps.select.outputs.mods }}" \
-            --bump "${{ github.event.inputs.bump_type }}" \
+            --mod "seraphui=${{ github.event.inputs.seraphui }}" \
+            --mod "tradersoverhaul=${{ github.event.inputs.tradersoverhaul }}" \
+            --mod "seraphqol=${{ github.event.inputs.seraphqol }}" \
             --manifest "$MANIFEST"
 
           mapfile -t CHANGED_FILES < <(jq -r '.changedFiles[]' "$MANIFEST")
@@ -194,13 +203,12 @@ jobs:
         run: |
           set -euo pipefail
           MANIFEST="${{ steps.release.outputs.manifest }}"
-          IS_DEV=$(jq -r '.isDev' "$MANIFEST")
-          EXTRA_ARGS=""
-          if [ "$IS_DEV" = "true" ]; then
-            EXTRA_ARGS="--prerelease"
-          fi
+          while IFS=$'\t' read -r MOD_ID TAG ZIP_NAME RELEASE_IS_DEV NOTES_FILE; do
+            EXTRA_ARGS=()
+            if [ "$RELEASE_IS_DEV" = "true" ]; then
+              EXTRA_ARGS+=("--prerelease")
+            fi
 
-          while IFS=$'\t' read -r MOD_ID TAG ZIP_NAME NOTES_FILE; do
             NOTES_ARGS=("--generate-notes")
             if [ -n "$NOTES_FILE" ] && [ -f "$NOTES_FILE" ]; then
               NOTES_ARGS=("--notes-file" "$NOTES_FILE")
@@ -209,7 +217,7 @@ jobs:
             gh release create "$TAG" \
               "release-assets/${MOD_ID}/${ZIP_NAME}" \
               "release-assets/${MOD_ID}/SHA256SUMS.txt" \
-              $EXTRA_ARGS \
+              "${EXTRA_ARGS[@]}" \
               --title "$TAG" \
               "${NOTES_ARGS[@]}"
-          done < <(jq -r '.releases[] | [.modId, .tag, .zipName, (.notesFile // "")] | @tsv' "$MANIFEST")
+          done < <(jq -r '.releases[] | [.modId, .tag, .zipName, (.isDev | tostring), (.notesFile // "")] | @tsv' "$MANIFEST")

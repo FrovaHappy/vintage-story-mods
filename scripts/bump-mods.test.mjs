@@ -88,12 +88,13 @@ test("runReleaseBump updates selected mod, freezes changelog, and keeps fixed zi
       releaseDate: "2026-11-21"
     });
 
-    assert.equal(manifest.isDev, false);
     assert.equal(manifest.releases.length, 1);
     assert.deepEqual(manifest.releases[0], {
       modId: "seraphqol",
       name: "Seraph QoL",
       dir: "mods/seraph-qol",
+      bumpType: "fix",
+      isDev: false,
       version: "0.1.1",
       tag: "seraphqol-v0.1.1",
       zipName: "seraphqol.zip",
@@ -151,11 +152,12 @@ test("runReleaseBump dev release does not freeze unreleased.md or leak dev dep t
       releaseDate: "2026-11-21"
     });
 
-    assert.equal(manifest.isDev, true);
     assert.equal(manifest.releases[0].version, "0.1.1-dev.0");
     assert.equal(manifest.releases[0].tag, "seraphui-v0.1.1-dev.0");
+    assert.equal(manifest.releases[0].isDev, true);
     assert.equal(manifest.releases[1].version, "0.1.1-dev.2");
     assert.equal(manifest.releases[1].tag, "seraphqol-v0.1.1-dev.2");
+    assert.equal(manifest.releases[1].isDev, true);
     assert.equal(manifest.releases[1].notesFile, "mods/seraph-qol/changelogs/unreleased.md");
 
     // Selected dependent mod gets dev seraphui dep; unselected tradersoverhaul stays at 0.1.0
@@ -164,6 +166,82 @@ test("runReleaseBump dev release does not freeze unreleased.md or leak dev dep t
     assert.equal(qolModinfo.dependencies.seraphui, "0.1.1-dev.0");
     assert.equal(tradersModinfo.dependencies.seraphui, "0.1.0");
     assert.equal(fs.existsSync(path.join(root, "mods/seraph-qol/changelogs/v0.1.1-dev.2.md")), false);
+  } finally {
+    fs.rmSync(root, { recursive: true, force: true });
+  }
+});
+
+test("runReleaseBump supports per-mod bump types with none skipped", () => {
+  const root = createTempRepoFixture();
+  try {
+    const manifest = runReleaseBump({
+      rootDir: root,
+      modBumps: {
+        seraphui: "fix",
+        tradersoverhaul: "fix",
+        seraphqol: "minor"
+      },
+      releaseDate: "2026-11-22"
+    });
+
+    assert.equal(manifest.releases.length, 3);
+    assert.equal(manifest.releases[0].modId, "seraphui");
+    assert.equal(manifest.releases[0].version, "0.1.1");
+    assert.equal(manifest.releases[0].isDev, false);
+    assert.equal(manifest.releases[1].modId, "tradersoverhaul");
+    assert.equal(manifest.releases[1].version, "0.1.1");
+    assert.equal(manifest.releases[1].isDev, false);
+    assert.equal(manifest.releases[2].modId, "seraphqol");
+    assert.equal(manifest.releases[2].version, "0.2.0");
+    assert.equal(manifest.releases[2].isDev, false);
+
+    const tradersModinfo = JSON.parse(fs.readFileSync(path.join(root, "mods/comerciantes/modinfo.json"), "utf8"));
+    const qolModinfo = JSON.parse(fs.readFileSync(path.join(root, "mods/seraph-qol/modinfo.json"), "utf8"));
+    assert.equal(tradersModinfo.dependencies.seraphui, "0.1.1");
+    assert.equal(qolModinfo.dependencies.seraphui, "0.1.1");
+  } finally {
+    fs.rmSync(root, { recursive: true, force: true });
+  }
+});
+
+test("runReleaseBump isolates mixed dev and stable releases per mod and rejects all none", () => {
+  const root = createTempRepoFixture();
+  try {
+    assert.throws(() => {
+      runReleaseBump({
+        rootDir: root,
+        modBumps: {
+          seraphui: "none",
+          tradersoverhaul: "none",
+          seraphqol: "none"
+        },
+        releaseDate: "2026-11-22"
+      });
+    }, /At least one mod/i);
+
+    const manifest = runReleaseBump({
+      rootDir: root,
+      modBumps: {
+        seraphui: "dev",
+        tradersoverhaul: "fix",
+        seraphqol: "none"
+      },
+      releaseDate: "2026-11-22"
+    });
+
+    assert.equal(manifest.releases.length, 2);
+    assert.equal(manifest.releases[0].modId, "seraphui");
+    assert.equal(manifest.releases[0].isDev, true);
+    assert.equal(manifest.releases[0].version, "0.1.1-dev.0");
+    assert.equal(manifest.releases[1].modId, "tradersoverhaul");
+    assert.equal(manifest.releases[1].isDev, false);
+    assert.equal(manifest.releases[1].version, "0.1.1");
+
+    // Stable release must not depend on dev seraphui; skipped none mod stays untouched
+    const tradersModinfo = JSON.parse(fs.readFileSync(path.join(root, "mods/comerciantes/modinfo.json"), "utf8"));
+    const qolModinfo = JSON.parse(fs.readFileSync(path.join(root, "mods/seraph-qol/modinfo.json"), "utf8"));
+    assert.equal(tradersModinfo.dependencies.seraphui, "0.1.0");
+    assert.equal(qolModinfo.version, "0.1.1-dev.1");
   } finally {
     fs.rmSync(root, { recursive: true, force: true });
   }
