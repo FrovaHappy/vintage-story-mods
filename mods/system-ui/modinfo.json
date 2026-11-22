@@ -6,7 +6,7 @@
     "FrovaHappy"
   ],
   "description": "Biblioteca de componentes de interfaz grafica desacoplada y reusable para mods de Vintage Story. Etapa temprana de desarrollo: puede contener bugs. Impulsado con IA · Hecho en Argentina.",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "side": "Universal",
   "iconPath": "modicon.png",
   "dependencies": {

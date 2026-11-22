@@ -6,12 +6,12 @@
     "FrovaHappy"
   ],
   "description": "Sistema economico dinamico para comerciantes: afinidades por tipo, demanda diaria, anti-farmeo, valoracion transparente y directorio global. Etapa temprana de desarrollo: puede contener bugs. Impulsado con IA · Hecho en Argentina.",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "side": "Universal",
   "iconPath": "modicon.png",
   "dependencies": {
     "game": "1.22.0",
     "survival": "1.22.0",
-    "seraphui": "0.1.0"
+    "seraphui": "0.1.1"
   }
 }
