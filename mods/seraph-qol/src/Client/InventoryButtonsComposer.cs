@@ -68,7 +68,7 @@ public sealed class InventoryButtonsComposer : IDisposable
             }
 
             AddToggleButton(composer, titleBar, addedButtons, "seraphqol-inv-favorite", "favorite",
-                ColorUtil.ColorFromRgba(255, 210, 75, 255),
+                ColorUtil.ColorFromRgba(84, 185, 222, 255),
                 _modSystem.Favorites.IsFavoriteModeActive,
                 SeraphQoLLang.Get("tooltip-favorite-mode"),
                 cursorX, y,
@@ -87,7 +87,7 @@ public sealed class InventoryButtonsComposer : IDisposable
             cursorX -= Spacing;
 
             AddToggleButton(composer, titleBar, addedButtons, "seraphqol-inv-lock", "lock-slot",
-                ColorUtil.ColorFromRgba(235, 70, 70, 255),
+                ColorUtil.ColorFromRgba(224, 198, 111, 255),
                 _modSystem.LockedSlots.IsLockModeActive,
                 SeraphQoLLang.Get("tooltip-lock-slot-mode"),
                 cursorX, y,
@@ -195,24 +195,28 @@ public sealed class InventoryButtonsComposer : IDisposable
         EnsureBadgeTextures();
 
         double iconSize = GuiElement.scaled(11.0);
+        double pad = GuiElement.scaled(2.5);
         _capi.Render.GLDisableDepthTest();
+
+        // Estrella (favorito): esquina superior derecha (top-right)
         if (drawFavorite && _favoriteBadgeTex.TextureId > 0)
         {
             _capi.Render.Render2DTexturePremultipliedAlpha(
                 _favoriteBadgeTex.TextureId,
-                (float)(slotBounds.renderX + GuiElement.scaled(2.0)),
-                (float)(slotBounds.renderY + GuiElement.scaled(2.0)),
+                (float)(slotBounds.renderX + slotBounds.InnerWidth - iconSize - pad),
+                (float)(slotBounds.renderY + pad),
                 (float)iconSize,
                 (float)iconSize,
                 260f);
         }
 
+        // Candado (bloqueado): esquina inferior izquierda (bottom-left)
         if (drawLocked && _lockBadgeTex.TextureId > 0)
         {
             _capi.Render.Render2DTexturePremultipliedAlpha(
                 _lockBadgeTex.TextureId,
-                (float)(slotBounds.renderX + slotBounds.InnerWidth - iconSize - GuiElement.scaled(2.0)),
-                (float)(slotBounds.renderY + GuiElement.scaled(2.0)),
+                (float)(slotBounds.renderX + pad),
+                (float)(slotBounds.renderY + slotBounds.InnerHeight - iconSize - pad),
                 (float)iconSize,
                 (float)iconSize,
                 260f);
@@ -316,13 +320,13 @@ public sealed class InventoryButtonsComposer : IDisposable
             _capi,
             new AssetLocation(SeraphQoLLang.Domain, "textures/icons/favorite.svg"),
             size,
-            ColorUtil.ColorFromRgba(255, 210, 75, 240),
+            null,
             ref _favoriteBadgeTex);
         SvgTextureHelper.LoadOrReplace(
             _capi,
             new AssetLocation(SeraphQoLLang.Domain, "textures/icons/lock-slot.svg"),
             size,
-            ColorUtil.ColorFromRgba(235, 65, 65, 245),
+            null,
             ref _lockBadgeTex);
 
         EnsureMatchingHighlightTexture();
@@ -331,18 +335,27 @@ public sealed class InventoryButtonsComposer : IDisposable
 
     private void EnsureMatchingHighlightTexture()
     {
-        const int texSize = 48;
+        int texSize = Math.Max(24, (int)GuiElement.scaled(48.0));
+        SvgTextureHelper.LoadOrReplace(
+            _capi,
+            new AssetLocation(SeraphQoLLang.Domain, "textures/icons/slot-selection.svg"),
+            texSize,
+            null,
+            ref _matchingHighlightTex);
+
+        if (_matchingHighlightTex.TextureId > 0) return;
+
         using var surface = new Cairo.ImageSurface(Cairo.Format.Argb32, texSize, texSize);
         using var ctx = new Cairo.Context(surface);
         ctx.Operator = Cairo.Operator.Clear;
         ctx.Paint();
         ctx.Operator = Cairo.Operator.Over;
 
-        // Resaltado marron claro sutil en el centro y borde marcado para no tapar indicadores de estado
+        // Fallback procedural: Resaltado marron sutil (#9F6833) si el SVG no estuviese disponible
         ctx.SetSourceRGBA(0.80, 0.58, 0.36, 0.20);
         ctx.Rectangle(2, 2, texSize - 4, texSize - 4);
         ctx.FillPreserve();
-        ctx.SetSourceRGBA(0.92, 0.72, 0.48, 0.98);
+        ctx.SetSourceRGBA(0.62, 0.41, 0.20, 0.98);
         ctx.LineWidth = 3.2;
         ctx.Stroke();
 

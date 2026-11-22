@@ -36,7 +36,8 @@ public readonly record struct SlotIndicatorInput(
 public enum SlotBarPosition
 {
     Top,
-    Middle
+    Middle,
+    Background
 }
 
 public readonly record struct SlotIndicatorResult(
@@ -54,6 +55,19 @@ public readonly record struct SlotIndicatorResult(
 /// </summary>
 public static class SlotIndicatorPlanner
 {
+    public static float? ComputePerishRatio(float freshHoursLeft, float freshHours, float transitionLevel, float transitionHours)
+    {
+        float totalHours = freshHours + transitionHours;
+        if (totalHours <= 0.001f) return null;
+
+        if (freshHoursLeft > 0.001f)
+        {
+            return Math.Clamp(freshHoursLeft / Math.Max(0.01f, freshHours), 0f, 1f);
+        }
+
+        return Math.Clamp((1f - transitionLevel) * 0.20f, 0f, 0.20f);
+    }
+
     public static SlotIndicatorResult Evaluate(in SlotIndicatorInput input, SlotIndicatorOptions options)
     {
         if (!options.Enabled || !input.HasItem)
@@ -74,7 +88,7 @@ public static class SlotIndicatorPlanner
 
         if (options.ShowLiquid && input.LiquidFillRatio is float liquid && liquid > 0.001f)
         {
-            return new SlotIndicatorResult(SlotIndicatorKind.LiquidVolume, Math.Clamp(liquid, 0f, 1f), false, false, SlotBarPosition.Middle);
+            return new SlotIndicatorResult(SlotIndicatorKind.LiquidVolume, Math.Clamp(liquid, 0f, 1f), false, false, SlotBarPosition.Background);
         }
 
         if (options.ShowFoodContainer && input.FoodContainerFillRatio is float food && food > 0.001f)
@@ -90,7 +104,7 @@ public static class SlotIndicatorPlanner
         if (options.ShowFreshness && input.PerishRatioRemaining is float fresh)
         {
             float clamped = Math.Clamp(fresh, 0f, 1f);
-            return new SlotIndicatorResult(SlotIndicatorKind.Freshness, clamped, false, clamped <= 0.30f);
+            return new SlotIndicatorResult(SlotIndicatorKind.Freshness, clamped, false, clamped <= 0.30f, SlotBarPosition.Background);
         }
 
         if (options.ShowDurability && input.DurabilityRatioRemaining is float dur && dur < 0.999f)

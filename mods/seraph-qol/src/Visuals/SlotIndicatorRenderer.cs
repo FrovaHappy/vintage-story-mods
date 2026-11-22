@@ -61,11 +61,40 @@ public sealed class SlotIndicatorRenderer : IDisposable
         EnsureWhiteTexture();
         if (_whiteTex.TextureId <= 0) return;
 
-        float slotExtent = (float)Math.Max(itemSize * 1.12, GuiElement.scaled(GuiElementPassiveItemSlot.unscaledItemSize - 4.0));
-        float left = (float)(centerX - (slotExtent * 0.5));
-        float top = (float)(centerY - (slotExtent * 0.5));
+        // Usar los limites exactos del slot en pantalla a partir del scissor activo para ocupar el 100% total
+        ElementBounds? slotBounds = render.ScissorStack.Count > 0 ? render.ScissorStack.Peek() : null;
+        float slotW = slotBounds != null ? (float)slotBounds.InnerWidth : (float)Math.Max(itemSize * 1.25, GuiElement.scaled(GuiElementPassiveItemSlot.unscaledItemSize));
+        float slotH = slotBounds != null ? (float)slotBounds.InnerHeight : slotW;
+        float left = slotBounds != null ? (float)slotBounds.renderX : (float)(centerX - (slotW * 0.5));
+        float top = slotBounds != null ? (float)slotBounds.renderY : (float)(centerY - (slotH * 0.5));
 
-        _pending = new PendingSlotDraw(true, res, left, top, slotExtent);
+        // Indicadores que van por detras del item (frescura de alimentos, liquidos) ocupando todo el slot
+        if (res.BarPosition == SlotBarPosition.Background)
+        {
+            float fillH = Math.Clamp(slotH * res.FillRatio, 1f, slotH);
+            float barY = top + slotH - fillH;
+
+            float alpha = 0.88f;
+            if (res.IsUrgent)
+            {
+                double ms = _capi.World?.ElapsedMilliseconds ?? 0;
+                alpha = (float)(0.60 + (0.28 * Math.Sin((ms % 1200) / 1200.0 * Math.PI * 2.0)));
+            }
+
+            render.GLDisableDepthTest();
+            render.Render2DTexturePremultipliedAlpha(
+                _whiteTex.TextureId,
+                left,
+                barY,
+                slotW,
+                fillH,
+                40f,
+                ResolvePremultipliedColor(res, alpha));
+            render.GLEnableDepthTest();
+            return;
+        }
+
+        _pending = new PendingSlotDraw(true, res, left, top, slotW);
     }
 
     public void RenderAfterScissor(IRenderAPI render)
@@ -267,18 +296,8 @@ public sealed class SlotIndicatorRenderer : IDisposable
             NightVisionFuelRatio: nvFuel);
     }
 
-    private static float? ComputePerishRatio(TransitionState st)
-    {
-        if (st.TransitionedHours > 0.001f)
-        {
-            return Math.Clamp((1f - st.TransitionLevel) * 0.25f, 0f, 0.25f);
-        }
-        if (st.FreshHours > 0.01f)
-        {
-            return Math.Clamp(st.FreshHoursLeft / st.FreshHours, 0f, 1f);
-        }
-        return null;
-    }
+    private static float? ComputePerishRatio(TransitionState st) =>
+        SlotIndicatorPlanner.ComputePerishRatio(st.FreshHoursLeft, st.FreshHours, st.TransitionLevel, st.TransitionHours);
 
     private void EnsureWhiteTexture()
     {
@@ -296,9 +315,10 @@ public sealed class SlotIndicatorRenderer : IDisposable
     {
         return res.Kind switch
         {
-            SlotIndicatorKind.Freshness or SlotIndicatorKind.Durability => HealthColor(res.FillRatio, alpha),
+            SlotIndicatorKind.Freshness => FreshnessColor(res.FillRatio, alpha),
+            SlotIndicatorKind.Durability => HealthColor(res.FillRatio, alpha),
             SlotIndicatorKind.Preparation => Premultiply(0.84f, 0.66f, 0.34f, alpha),
-            SlotIndicatorKind.LiquidVolume => Premultiply(0.30f, 0.66f, 0.94f, alpha),
+            SlotIndicatorKind.LiquidVolume => Premultiply(0.24f, 0.55f, 0.82f, alpha),
             SlotIndicatorKind.CrucibleContent => res.IsMolten
                 ? Premultiply(1.00f, 0.54f, 0.16f, alpha)
                 : Premultiply(0.78f, 0.69f, 0.45f, alpha),
@@ -306,6 +326,14 @@ public sealed class SlotIndicatorRenderer : IDisposable
             SlotIndicatorKind.NightVisionFuel => Premultiply(0.28f, 0.88f, 0.76f, alpha),
             _ => Premultiply(0.80f, 0.80f, 0.80f, alpha)
         };
+    }
+
+    private static Vec4f FreshnessColor(float ratio, float alpha)
+    {
+        // Color verde salvia armonioso (#9BAC7F en fresco) segun rediseño de UI de slot
+        if (ratio >= 0.55f) return Premultiply(0.608f, 0.675f, 0.498f, alpha);
+        if (ratio >= 0.25f) return Premultiply(0.85f, 0.60f, 0.28f, alpha);
+        return Premultiply(0.75f, 0.28f, 0.24f, alpha);
     }
 
     private static Vec4f HealthColor(float ratio, float alpha)

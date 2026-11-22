@@ -26,6 +26,7 @@ public sealed class VisualIndicatorsTests
         Assert.Equal(SlotIndicatorKind.Freshness, perish.Kind);
         Assert.Equal(0.25f, perish.FillRatio, 3);
         Assert.True(perish.IsUrgent);
+        Assert.Equal(SlotBarPosition.Background, perish.BarPosition);
 
         SlotIndicatorResult crucible = SlotIndicatorPlanner.Evaluate(
             new SlotIndicatorInput(
@@ -74,7 +75,36 @@ public sealed class VisualIndicatorsTests
             opts);
 
         Assert.Equal(SlotIndicatorKind.LiquidVolume, liquid.Kind);
-        Assert.Equal(SlotBarPosition.Middle, liquid.BarPosition);
+        Assert.Equal(SlotBarPosition.Background, liquid.BarPosition);
+    }
+
+    [Fact]
+    public void SlotIndicatorPlanner_ComputePerishRatio_CalculatesFreshnessAccurately()
+    {
+        // 1. Alimento fresco con 10 dias totales (240h) y 180h restantes -> 75%
+        float? fresh75 = SlotIndicatorPlanner.ComputePerishRatio(freshHoursLeft: 180f, freshHours: 240f, transitionLevel: 0f, transitionHours: 48f);
+        Assert.NotNull(fresh75);
+        Assert.Equal(0.75f, fresh75.Value, 2);
+
+        // 2. Alimento de corta durabilidad (3 dias = 72h) con 36h restantes -> 50%
+        float? fresh50 = SlotIndicatorPlanner.ComputePerishRatio(freshHoursLeft: 36f, freshHours: 72f, transitionLevel: 0f, transitionHours: 24f);
+        Assert.NotNull(fresh50);
+        Assert.Equal(0.50f, fresh50.Value, 2);
+
+        // 3. Alimento recien preparado / 100% fresco -> 1.0 (100%)
+        float? fresh100 = SlotIndicatorPlanner.ComputePerishRatio(freshHoursLeft: 120f, freshHours: 120f, transitionLevel: 0f, transitionHours: 24f);
+        Assert.NotNull(fresh100);
+        Assert.Equal(1.0f, fresh100.Value, 2);
+
+        // 4. Alimento en descomposicion activa (freshHoursLeft == 0, transitionLevel = 0.5) -> critico <= 0.20
+        float? spoiling = SlotIndicatorPlanner.ComputePerishRatio(freshHoursLeft: 0f, freshHours: 120f, transitionLevel: 0.5f, transitionHours: 24f);
+        Assert.NotNull(spoiling);
+        Assert.Equal(0.10f, spoiling.Value, 2);
+
+        // 5. Totalmente podrido -> 0
+        float? rotten = SlotIndicatorPlanner.ComputePerishRatio(freshHoursLeft: 0f, freshHours: 120f, transitionLevel: 1.0f, transitionHours: 24f);
+        Assert.NotNull(rotten);
+        Assert.Equal(0f, rotten.Value, 2);
     }
 
     [Fact]

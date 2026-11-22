@@ -283,7 +283,7 @@ internal static class SvgTextureHelper
         ICoreClientAPI api,
         AssetLocation svgAsset,
         int size,
-        int color,
+        int? color,
         ref LoadedTexture target)
     {
         if (api.Assets.TryGet(svgAsset) == null) return;
@@ -303,16 +303,9 @@ internal static class SvgTextureHelper
         using var surface = new ImageSurface(Format.Argb32, totalSize, totalSize);
         using var ctx = new Context(surface);
         GuiElement.RoundRectangle(ctx, 0.5, 0.5, totalSize - 1.0, totalSize - 1.0, GuiElement.scaled(3.0));
-        if (isActive)
-        {
-            ctx.SetSourceRGBA(0.95, 0.78, 0.28, 0.25);
-        }
-        else
-        {
-            ctx.SetSourceRGBA(1.0, 1.0, 1.0, 0.16);
-        }
+        ctx.SetSourceRGBA(1.0, 1.0, 1.0, isActive ? 0.20 : 0.14);
         ctx.FillPreserve();
-        ctx.SetSourceRGBA(1.0, 1.0, 1.0, isActive ? 0.55 : 0.35);
+        ctx.SetSourceRGBA(1.0, 1.0, 1.0, isActive ? 0.45 : 0.30);
         ctx.LineWidth = Math.Max(1.0, GuiElement.scaled(1.0));
         ctx.Stroke();
         api.Gui.LoadOrUpdateCairoTexture(surface, true, ref target);
