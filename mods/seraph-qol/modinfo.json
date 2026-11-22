@@ -15,7 +15,7 @@
     "Dimasas (Bigger Backpacks reference)"
   ],
   "description": "Suite modular de calidad de vida (inventario, refill, calculadora de aleaciones, menús radiales, indicadores de slots y fauna, partículas de recursos, equip light, resaltado y rastreo de proyectiles) y rebalanceo de fauna silvestre. Etapa temprana de desarrollo: puede contener bugs. Impulsado con IA · Hecho en Argentina.",
-  "version": "0.1.0",
+  "version": "0.1.1-dev.0",
   "side": "Universal",
   "iconPath": "modicon.png",
   "dependencies": {
