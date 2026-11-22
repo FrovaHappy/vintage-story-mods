@@ -90,6 +90,7 @@ public sealed class SeraphQoLServerConfig
     // Fase 2: Refill y Exploracion
     public bool AllowHotbarRefill { get; set; } = true;
     public bool AllowProjectileTracker { get; set; } = true;
+    public bool AllowHandbookNearbyCrafting { get; set; } = true;
 
     public HashSet<string> AdditionalContainerWhitelist { get; set; } = new(StringComparer.OrdinalIgnoreCase);
     public HashSet<string> ContainerBlacklist { get; set; } = new(StringComparer.OrdinalIgnoreCase);
@@ -477,6 +478,7 @@ public sealed class SeraphQoLServerConfig
         RequireLandClaimPermission = source.RequireLandClaimPermission;
         AllowHotbarRefill = source.AllowHotbarRefill;
         AllowProjectileTracker = source.AllowProjectileTracker;
+        AllowHandbookNearbyCrafting = source.AllowHandbookNearbyCrafting;
         StackSizePreset = source.StackSizePreset;
         EnableStackSizeModifier = source.EnableStackSizeModifier;
         GlobalStackMultiplier = source.GlobalStackMultiplier;
@@ -590,6 +592,7 @@ public sealed class SeraphQoLServerConfig
             nameof(RequireLandClaimPermission) => ConfigValueParser.TryBool(raw, v => RequireLandClaimPermission = v),
             nameof(AllowHotbarRefill) => ConfigValueParser.TryBool(raw, v => AllowHotbarRefill = v),
             nameof(AllowProjectileTracker) => ConfigValueParser.TryBool(raw, v => AllowProjectileTracker = v),
+            nameof(AllowHandbookNearbyCrafting) => ConfigValueParser.TryBool(raw, v => AllowHandbookNearbyCrafting = v),
             nameof(EnableStackSizeModifier) => MarkGroup(ConfigValueParser.TryBool(raw, v => EnableStackSizeModifier = v), ref isStackProperty),
             nameof(GlobalStackMultiplier) => MarkGroup(ConfigValueParser.TryDouble(raw, v => GlobalStackMultiplier = v), ref isStackProperty),
             nameof(BuildingBlocksStackMultiplier) => MarkGroup(ConfigValueParser.TryDouble(raw, v => BuildingBlocksStackMultiplier = v), ref isStackProperty),

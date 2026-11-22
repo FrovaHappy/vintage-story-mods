@@ -693,6 +693,113 @@
 
     {
       "type": "separator",
+      "title": "seraphqol:config-section-handbook",
+      "weight": 9.96
+    },
+    {
+      "code": "EnableHandbookRecipeHelpers",
+      "name": "EnableHandbookRecipeHelpers",
+      "ingui": "seraphqol:config-enable-handbook-recipes",
+      "comment": "seraphqol:config-enable-handbook-recipes-comment",
+      "type": "boolean",
+      "default": true,
+      "clientSide": true,
+      "weight": 9.961
+    },
+    {
+      "code": "EnableHandbookVariantScroll",
+      "name": "EnableHandbookVariantScroll",
+      "ingui": "seraphqol:config-enable-handbook-variant-scroll",
+      "comment": "seraphqol:config-enable-handbook-variant-scroll-comment",
+      "type": "boolean",
+      "default": true,
+      "clientSide": true,
+      "weight": 9.962
+    },
+    {
+      "code": "EnableHandbookGridAutoFill",
+      "name": "EnableHandbookGridAutoFill",
+      "ingui": "seraphqol:config-enable-handbook-autofill",
+      "comment": "seraphqol:config-enable-handbook-autofill-comment",
+      "type": "boolean",
+      "default": true,
+      "clientSide": true,
+      "weight": 9.963
+    },
+    {
+      "code": "HandbookAutoFillSkipLockedSlots",
+      "name": "HandbookAutoFillSkipLockedSlots",
+      "ingui": "seraphqol:config-handbook-autofill-skip-locked",
+      "comment": "seraphqol:config-handbook-autofill-skip-locked-comment",
+      "type": "boolean",
+      "default": true,
+      "clientSide": true,
+      "weight": 9.964
+    },
+    {
+      "code": "HandbookAutoFillIncludeOpenChests",
+      "name": "HandbookAutoFillIncludeOpenChests",
+      "ingui": "seraphqol:config-handbook-autofill-include-chests",
+      "comment": "seraphqol:config-handbook-autofill-include-chests-comment",
+      "type": "boolean",
+      "default": true,
+      "clientSide": true,
+      "weight": 9.965
+    },
+    {
+      "code": "ShowHandbookToolWrenchAndDurability",
+      "name": "ShowHandbookToolWrenchAndDurability",
+      "ingui": "seraphqol:config-handbook-tool-durability",
+      "comment": "seraphqol:config-handbook-tool-durability-comment",
+      "type": "boolean",
+      "default": true,
+      "clientSide": true,
+      "weight": 9.966
+    },
+    {
+      "code": "ShowItemMaxStackTooltip",
+      "name": "ShowItemMaxStackTooltip",
+      "ingui": "seraphqol:config-handbook-max-stack-tooltip",
+      "comment": "seraphqol:config-handbook-max-stack-tooltip-comment",
+      "type": "boolean",
+      "default": true,
+      "clientSide": true,
+      "weight": 9.967
+    },
+    {
+      "code": "HighlightMissingHandbookIngredients",
+      "name": "HighlightMissingHandbookIngredients",
+      "ingui": "seraphqol:config-handbook-missing-highlight",
+      "comment": "seraphqol:config-handbook-missing-highlight-comment",
+      "type": "boolean",
+      "default": true,
+      "clientSide": true,
+      "weight": 9.968
+    },
+    {
+      "code": "HandbookSearchNearbyContainers",
+      "name": "HandbookSearchNearbyContainers",
+      "ingui": "seraphqol:config-handbook-search-nearby",
+      "comment": "seraphqol:config-handbook-search-nearby-comment",
+      "type": "boolean",
+      "default": true,
+      "clientSide": true,
+      "weight": 9.969
+    },
+    {
+      "code": "HandbookSearchRadius",
+      "name": "HandbookSearchRadius",
+      "ingui": "seraphqol:config-handbook-search-radius",
+      "comment": "seraphqol:config-handbook-search-radius-comment",
+      "type": "integer",
+      "default": 6,
+      "range": { "min": 4, "max": 10, "step": 1 },
+      "clientSide": true,
+      "weight": 9.970
+    },
+
+    {
+      "type": "separator",
       "title": "seraphqol:config-section-fauna",
       "weight": 10.0
     },
@@ -879,6 +986,15 @@
       "type": "boolean",
       "default": true,
       "weight": 11.35
+    },
+    {
+      "code": "AllowHandbookNearbyCrafting",
+      "name": "AllowHandbookNearbyCrafting",
+      "ingui": "seraphqol:config-allow-handbook-nearby",
+      "comment": "seraphqol:config-allow-handbook-nearby-comment",
+      "type": "boolean",
+      "default": true,
+      "weight": 11.4
     },
 
     {

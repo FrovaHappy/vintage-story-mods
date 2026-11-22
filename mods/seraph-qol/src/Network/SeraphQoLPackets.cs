@@ -47,6 +47,7 @@ public sealed class ServerPolicySyncPacket
     [ProtoMember(38)] public List<string> BackpackBlacklist { get; set; } = new();
     [ProtoMember(39)] public List<string> BackpackOverridePatterns { get; set; } = new();
     [ProtoMember(40)] public List<int> BackpackOverrideValues { get; set; } = new();
+    [ProtoMember(41)] public bool AllowHandbookNearbyCrafting { get; set; } = true;
 
     public static ServerPolicySyncPacket FromPolicy(EffectiveServerPolicy policy)
     {
@@ -94,7 +95,8 @@ public sealed class ServerPolicySyncPacket
             MaxBackpackSlotsCap = policy.MaxBackpackSlotsCap,
             BackpackBlacklist = policy.BackpackBlacklist.ToList(),
             BackpackOverridePatterns = backpackPatterns,
-            BackpackOverrideValues = backpackValues
+            BackpackOverrideValues = backpackValues,
+            AllowHandbookNearbyCrafting = policy.AllowHandbookNearbyCrafting
         };
     }
 
@@ -146,7 +148,8 @@ public sealed class ServerPolicySyncPacket
             ModdedBackpacksMultiplier,
             MaxBackpackSlotsCap,
             new HashSet<string>(BackpackBlacklist, StringComparer.OrdinalIgnoreCase),
-            backpackOverrides);
+            backpackOverrides,
+            AllowHandbookNearbyCrafting);
     }
 
     private static (List<string> Patterns, List<int> Values) SplitOverrideDictionary(IReadOnlyDictionary<string, int> source)
@@ -288,4 +291,45 @@ public sealed class AlloyDepositResultPacket
     [ProtoMember(1)] public BlockPos FirepitPos { get; set; } = new(0);
     [ProtoMember(2)] public int MovedItems { get; set; }
     [ProtoMember(3)] public int MovedFuel { get; set; }
+}
+
+[ProtoContract]
+public sealed class RequestHandbookScanPacket
+{
+    [ProtoMember(1)] public int SearchRadius { get; set; } = 6;
+}
+
+[ProtoContract]
+public sealed class HandbookScanResultPacket
+{
+    [ProtoMember(1)] public int SearchRadius { get; set; }
+    [ProtoMember(2)] public List<string> ItemCodes { get; set; } = new();
+    [ProtoMember(3)] public List<int> ItemCounts { get; set; } = new();
+    [ProtoMember(4)] public List<int> MaxRemainingDurabilities { get; set; } = new();
+}
+
+[ProtoContract]
+public sealed class HandbookRecipeCandidatePacket
+{
+    [ProtoMember(1)] public int RecipeId { get; set; }
+    [ProtoMember(2)] public string OutputCode { get; set; } = string.Empty;
+    [ProtoMember(3)] public int Width { get; set; }
+    [ProtoMember(4)] public int Height { get; set; }
+    [ProtoMember(5)] public bool Shapeless { get; set; }
+    [ProtoMember(6)] public List<string> SlotIngredientCodes { get; set; } = new();
+}
+
+[ProtoContract]
+public sealed class HandbookFillGridPacket
+{
+    [ProtoMember(1)] public bool FillMax { get; set; }
+    [ProtoMember(2)] public bool IncludeNearby { get; set; }
+    [ProtoMember(3)] public int SearchRadius { get; set; } = 6;
+    [ProtoMember(4)] public List<HandbookRecipeCandidatePacket> Candidates { get; set; } = new();
+}
+
+[ProtoContract]
+public sealed class HandbookFillResultPacket
+{
+    [ProtoMember(1)] public bool Success { get; set; }
 }

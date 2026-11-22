@@ -46,7 +46,8 @@ public sealed record EffectiveServerPolicy(
     double ModdedBackpacksMultiplier = 1.0,
     int MaxBackpackSlotsCap = 64,
     IReadOnlySet<string>? BackpackBlacklist = null,
-    IReadOnlyDictionary<string, int>? BackpackOverrides = null)
+    IReadOnlyDictionary<string, int>? BackpackOverrides = null,
+    bool AllowHandbookNearbyCrafting = true)
 {
     public IReadOnlySet<string> StackSizeBlacklist { get; init; } =
         StackSizeBlacklist ?? new HashSet<string>(StringComparer.OrdinalIgnoreCase);
@@ -106,6 +107,7 @@ public sealed record EffectiveServerPolicy(
             server.ModdedBackpacksMultiplier,
             server.MaxBackpackSlotsCap,
             new HashSet<string>(server.BackpackBlacklist, StringComparer.OrdinalIgnoreCase),
-            new Dictionary<string, int>(server.BackpackOverrides, StringComparer.OrdinalIgnoreCase));
+            new Dictionary<string, int>(server.BackpackOverrides, StringComparer.OrdinalIgnoreCase),
+            server.AllowHandbookNearbyCrafting);
     }
 }

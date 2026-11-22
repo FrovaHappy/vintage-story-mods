@@ -18,7 +18,7 @@
 
 ## Resumen corto (ModDB Tagline)
 >
-> Modular Quality-of-Life suite for Vintage Story: inventory sorting & protection, configurable stack sizes, expandable backpacks & saddlebags, alloy calculator, radial menus, slot & livestock badges, entity health bars, hotbar refill, tracking, and fauna rebalance.
+> Modular Quality-of-Life suite for Vintage Story: inventory sorting & protection, improved handbook recipes, configurable stack sizes, expandable backpacks & saddlebags, alloy calculator, radial menus, slot & livestock badges, entity health bars, hotbar refill, tracking, and fauna rebalance.
 
 ## Estado de Media y Templates
 

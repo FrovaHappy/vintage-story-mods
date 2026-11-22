@@ -48,7 +48,7 @@ vintage-story-mods/
 
 | Mod | `modid` | Lado | Publicación | Descripción |
 | :--- | :--- | :--- | :--- | :--- |
-| **Seraph UI** | `seraphui` | `Client` | [`publisher/`](mods/system-ui/publisher/metadata.md) | Librería de componentes de interfaz gráfica (`UiDialogBase`, `SystemUITheme`) reutilizable para Vintage Story. |
+| **Seraph UI** | `seraphui` | `Universal` | [`publisher/`](mods/system-ui/publisher/metadata.md) | Librería de componentes de interfaz gráfica (`UiDialogBase`, `SystemUITheme`) reutilizable para Vintage Story. |
 | **Traders Overhaul** | `tradersoverhaul` | `Universal` | [`publisher/`](mods/comerciantes/publisher/metadata.md) / [`balance.md`](mods/comerciantes/balance.md) | Rediseño integral de la economía de comerciantes, afinidades, demanda diaria, saturación y directorio global. |
 | **Seraph QoL** | `seraphqol` | `Universal` | [`publisher/`](mods/seraph-qol/publisher/metadata.md) | Suite modular de UX/QoL (inventario, calculadora de aleaciones, menús radiales, indicadores de slots/fauna, refill, rastreo y rebalanceo de fauna). |
 

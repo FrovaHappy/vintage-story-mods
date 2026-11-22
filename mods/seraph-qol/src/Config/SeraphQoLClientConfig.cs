@@ -34,6 +34,8 @@ public sealed class SeraphQoLClientConfig
     public const int MaxAlloyUnitsPerNugget = 20;
     public const int MinAlloySearchRadius = 4;
     public const int MaxAlloySearchRadius = 10;
+    public const int MinHandbookSearchRadius = 4;
+    public const int MaxHandbookSearchRadius = 10;
     public const int MinAnimalIndicatorRange = 2;
     public const int MaxAnimalIndicatorRange = 24;
     public const double MinAnimalIndicatorOpacity = 0.2;
@@ -125,6 +127,18 @@ public sealed class SeraphQoLClientConfig
     public bool HighlightTerraPretaParticles { get; set; } = true;
     public bool HighlightMeteoricIronParticles { get; set; } = true;
 
+    // Fase 4: Improved Handbook Recipes
+    public bool EnableHandbookRecipeHelpers { get; set; } = true;
+    public bool EnableHandbookVariantScroll { get; set; } = true;
+    public bool EnableHandbookGridAutoFill { get; set; } = true;
+    public bool HandbookAutoFillSkipLockedSlots { get; set; } = true;
+    public bool HandbookAutoFillIncludeOpenChests { get; set; } = true;
+    public bool ShowHandbookToolWrenchAndDurability { get; set; } = true;
+    public bool ShowItemMaxStackTooltip { get; set; } = true;
+    public bool HighlightMissingHandbookIngredients { get; set; } = true;
+    public bool HandbookSearchNearbyContainers { get; set; } = true;
+    public int HandbookSearchRadius { get; set; } = 6;
+
     public Dictionary<string, HashSet<int>> LockedSlots { get; set; } = new(StringComparer.OrdinalIgnoreCase);
 
     public void Normalize()
@@ -137,6 +151,7 @@ public sealed class SeraphQoLClientConfig
         ProjectileWaypointTimeoutSeconds = Math.Clamp(ProjectileWaypointTimeoutSeconds, MinProjectileWaypointTimeoutSeconds, MaxProjectileWaypointTimeoutSeconds);
         AlloyUnitsPerNugget = Math.Clamp(AlloyUnitsPerNugget, MinAlloyUnitsPerNugget, MaxAlloyUnitsPerNugget);
         AlloySearchRadius = Math.Clamp(AlloySearchRadius, MinAlloySearchRadius, MaxAlloySearchRadius);
+        HandbookSearchRadius = Math.Clamp(HandbookSearchRadius, MinHandbookSearchRadius, MaxHandbookSearchRadius);
         AnimalIndicatorRange = Math.Clamp(AnimalIndicatorRange, MinAnimalIndicatorRange, MaxAnimalIndicatorRange);
         AnimalIndicatorOpacity = Math.Clamp(double.IsNaN(AnimalIndicatorOpacity) ? 0.90 : AnimalIndicatorOpacity, MinAnimalIndicatorOpacity, MaxAnimalIndicatorOpacity);
         AnimalIndicatorScale = Math.Clamp(double.IsNaN(AnimalIndicatorScale) ? 1.0 : AnimalIndicatorScale, MinAnimalIndicatorScale, MaxAnimalIndicatorScale);
@@ -338,6 +353,27 @@ public sealed class SeraphQoLClientConfig
                 return ConfigValueParser.TryBool(raw, v => HighlightTerraPretaParticles = v);
             case nameof(HighlightMeteoricIronParticles):
                 return ConfigValueParser.TryBool(raw, v => HighlightMeteoricIronParticles = v);
+            case nameof(EnableHandbookRecipeHelpers):
+                return ConfigValueParser.TryBool(raw, v => EnableHandbookRecipeHelpers = v);
+            case nameof(EnableHandbookVariantScroll):
+                return ConfigValueParser.TryBool(raw, v => EnableHandbookVariantScroll = v);
+            case nameof(EnableHandbookGridAutoFill):
+                return ConfigValueParser.TryBool(raw, v => EnableHandbookGridAutoFill = v);
+            case nameof(HandbookAutoFillSkipLockedSlots):
+                return ConfigValueParser.TryBool(raw, v => HandbookAutoFillSkipLockedSlots = v);
+            case nameof(HandbookAutoFillIncludeOpenChests):
+                return ConfigValueParser.TryBool(raw, v => HandbookAutoFillIncludeOpenChests = v);
+            case nameof(ShowHandbookToolWrenchAndDurability):
+                return ConfigValueParser.TryBool(raw, v => ShowHandbookToolWrenchAndDurability = v);
+            case nameof(ShowItemMaxStackTooltip):
+                return ConfigValueParser.TryBool(raw, v => ShowItemMaxStackTooltip = v);
+            case nameof(HighlightMissingHandbookIngredients):
+                return ConfigValueParser.TryBool(raw, v => HighlightMissingHandbookIngredients = v);
+            case nameof(HandbookSearchNearbyContainers):
+                return ConfigValueParser.TryBool(raw, v => HandbookSearchNearbyContainers = v);
+            case nameof(HandbookSearchRadius):
+                if (ConfigValueParser.TryInt(raw, v => HandbookSearchRadius = v)) { Normalize(); return true; }
+                return false;
             default:
                 return false;
         }

@@ -70,6 +70,18 @@ public sealed class SeraphQoLConfigTests
         Assert.Equal(2.5, cfg.HealthBarLingerSeconds, 3);
         Assert.Equal(18, cfg.HealthBarRange);
         Assert.True(cfg.EnableResourceParticles);
+
+        // Phase 4: Improved Handbook Recipes defaults
+        Assert.True(cfg.EnableHandbookRecipeHelpers);
+        Assert.True(cfg.EnableHandbookVariantScroll);
+        Assert.True(cfg.EnableHandbookGridAutoFill);
+        Assert.True(cfg.HandbookAutoFillSkipLockedSlots);
+        Assert.True(cfg.HandbookAutoFillIncludeOpenChests);
+        Assert.True(cfg.ShowHandbookToolWrenchAndDurability);
+        Assert.True(cfg.ShowItemMaxStackTooltip);
+        Assert.True(cfg.HighlightMissingHandbookIngredients);
+        Assert.True(cfg.HandbookSearchNearbyContainers);
+        Assert.Equal(6, cfg.HandbookSearchRadius);
     }
 
     [Fact]
@@ -149,6 +161,24 @@ public sealed class SeraphQoLConfigTests
         Assert.True(cfg.ApplySetting(nameof(SeraphQoLClientConfig.ProjectileWaypointTimeoutSeconds), new IntAttribute(120)));
         Assert.Equal(120, cfg.ProjectileWaypointTimeoutSeconds);
 
+        Assert.True(cfg.ApplySetting(nameof(SeraphQoLClientConfig.EnableHandbookRecipeHelpers), new BoolAttribute(false)));
+        Assert.False(cfg.EnableHandbookRecipeHelpers);
+
+        Assert.True(cfg.ApplySetting(nameof(SeraphQoLClientConfig.ShowItemMaxStackTooltip), new BoolAttribute(false)));
+        Assert.False(cfg.ShowItemMaxStackTooltip);
+
+        Assert.True(cfg.ApplySetting(nameof(SeraphQoLClientConfig.HandbookAutoFillSkipLockedSlots), new BoolAttribute(false)));
+        Assert.False(cfg.HandbookAutoFillSkipLockedSlots);
+
+        Assert.True(cfg.ApplySetting(nameof(SeraphQoLClientConfig.HighlightMissingHandbookIngredients), new BoolAttribute(false)));
+        Assert.False(cfg.HighlightMissingHandbookIngredients);
+
+        Assert.True(cfg.ApplySetting(nameof(SeraphQoLClientConfig.HandbookSearchNearbyContainers), new BoolAttribute(false)));
+        Assert.False(cfg.HandbookSearchNearbyContainers);
+
+        Assert.True(cfg.ApplySetting(nameof(SeraphQoLClientConfig.HandbookSearchRadius), new IntAttribute(99)));
+        Assert.Equal(SeraphQoLClientConfig.MaxHandbookSearchRadius, cfg.HandbookSearchRadius);
+
         Assert.True(cfg.ApplySetting(nameof(SeraphQoLClientConfig.EnableEntityHealthBars), new BoolAttribute(false)));
         Assert.False(cfg.EnableEntityHealthBars);
 
@@ -192,6 +222,7 @@ public sealed class SeraphQoLConfigTests
         Assert.True(cfg.RequireLandClaimPermission);
         Assert.True(cfg.AllowHotbarRefill);
         Assert.True(cfg.AllowProjectileTracker);
+        Assert.True(cfg.AllowHandbookNearbyCrafting);
 
         Assert.Equal(StackSizePreset.Vanilla, cfg.StackSizePreset);
         Assert.False(cfg.EnableStackSizeModifier);
@@ -480,6 +511,44 @@ public sealed class SeraphQoLConfigTests
         });
         Assert.Equal(20, depositRes.MovedItems);
         Assert.Equal(3, depositRes.MovedFuel);
+
+        var hbScanReq = RoundTrip(new RequestHandbookScanPacket { SearchRadius = 8 });
+        Assert.Equal(8, hbScanReq.SearchRadius);
+
+        var hbScanRes = RoundTrip(new HandbookScanResultPacket
+        {
+            SearchRadius = 8,
+            ItemCodes = ["game:plank-oak", "game:saw-copper"],
+            ItemCounts = [12, 1],
+            MaxRemainingDurabilities = [0, 180]
+        });
+        Assert.Equal(2, hbScanRes.ItemCodes.Count);
+        Assert.Equal(180, hbScanRes.MaxRemainingDurabilities[1]);
+
+        var hbFillReq = RoundTrip(new HandbookFillGridPacket
+        {
+            FillMax = true,
+            IncludeNearby = true,
+            SearchRadius = 6,
+            Candidates =
+            [
+                new HandbookRecipeCandidatePacket
+                {
+                    RecipeId = 42,
+                    OutputCode = "game:chest-oak",
+                    Width = 3,
+                    Height = 3,
+                    Shapeless = false,
+                    SlotIngredientCodes = ["game:plank-oak", "game:plank-oak"]
+                }
+            ]
+        });
+        Assert.True(hbFillReq.FillMax);
+        Assert.Single(hbFillReq.Candidates);
+        Assert.Equal("game:chest-oak", hbFillReq.Candidates[0].OutputCode);
+
+        var hbFillRes = RoundTrip(new HandbookFillResultPacket { Success = true });
+        Assert.True(hbFillRes.Success);
     }
 
     private static T RoundTrip<T>(T packet)

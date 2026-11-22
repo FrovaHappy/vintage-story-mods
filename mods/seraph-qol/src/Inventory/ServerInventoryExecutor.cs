@@ -1,6 +1,7 @@
 using HarmonyLib;
 using SeraphQoL.Alloy;
 using SeraphQoL.Config;
+using SeraphQoL.Handbook;
 using SeraphQoL.Network;
 using Vintagestory.API.Common;
 using Vintagestory.API.Config;
@@ -801,6 +802,311 @@ public sealed class ServerInventoryExecutor
         }
 
         return (movedItems, movedFuel, remeshPositions);
+    }
+
+    public HandbookScanResultPacket HandleHandbookScan(
+        IServerPlayer player,
+        RequestHandbookScanPacket packet,
+        EffectiveServerPolicy policy)
+    {
+        int radius = Math.Clamp(
+            packet.SearchRadius,
+            SeraphQoLClientConfig.MinHandbookSearchRadius,
+            SeraphQoLClientConfig.MaxHandbookSearchRadius);
+
+        var result = new HandbookScanResultPacket
+        {
+            SearchRadius = radius
+        };
+
+        IWorldAccessor? world = player.Entity?.World;
+        BlockPos? center = player.Entity?.Pos?.AsBlockPos;
+        if (world == null || center == null || !policy.EnableInventoryManagement || !policy.AllowHandbookNearbyCrafting)
+        {
+            return result;
+        }
+
+        var countsByCode = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
+        var maxDurabilityByCode = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
+
+        List<BlockEntityContainer> containers = FindNearbyAllowedContainers(
+            world,
+            player,
+            center,
+            radius,
+            policy,
+            excludePos: null);
+
+        foreach (BlockEntityContainer container in containers)
+        {
+            foreach (ItemSlot slot in container.Inventory)
+            {
+                if (slot == null || slot.Empty || slot.Itemstack?.Collectible?.Code == null) continue;
+                string code = slot.Itemstack.Collectible.Code.ToString();
+                countsByCode[code] = countsByCode.GetValueOrDefault(code) + slot.StackSize;
+                int remDur = slot.Itemstack.Collectible.GetRemainingDurability(slot.Itemstack);
+                if (remDur > maxDurabilityByCode.GetValueOrDefault(code))
+                {
+                    maxDurabilityByCode[code] = remDur;
+                }
+            }
+        }
+
+        foreach ((string code, int count) in countsByCode)
+        {
+            result.ItemCodes.Add(code);
+            result.ItemCounts.Add(count);
+            result.MaxRemainingDurabilities.Add(maxDurabilityByCode.GetValueOrDefault(code));
+        }
+
+        return result;
+    }
+
+    public (bool Success, List<BlockPos> RemeshPositions) HandleHandbookFillGrid(
+        IServerPlayer player,
+        HandbookFillGridPacket packet,
+        EffectiveServerPolicy policy)
+    {
+        var remeshPositions = new List<BlockPos>();
+        IWorldAccessor? world = player.Entity?.World;
+        BlockPos? center = player.Entity?.Pos?.AsBlockPos;
+        if (world == null || center == null || !policy.EnableInventoryManagement || packet.Candidates.Count == 0)
+        {
+            return (false, remeshPositions);
+        }
+
+        IInventory? craftingInv = player.InventoryManager.GetOwnInventory(GlobalConstants.craftingInvClassName);
+        if (craftingInv == null) return (false, remeshPositions);
+
+        ItemSlot[] gridSlots = craftingInv.Take(9).ToArray();
+        if (gridSlots.Length < 9) return (false, remeshPositions);
+
+        var sourceSlots = new List<(ItemSlot Slot, BlockEntityContainer? Container)>();
+        AppendUnlockedPlayerSlots(player, GlobalConstants.backpackInvClassName, sourceSlots);
+        AppendUnlockedPlayerSlots(player, GlobalConstants.hotBarInvClassName, sourceSlots);
+
+        var seenInventories = new HashSet<string>(StringComparer.Ordinal);
+        IInventory? bpInv = player.InventoryManager.GetOwnInventory(GlobalConstants.backpackInvClassName);
+        IInventory? hbInv = player.InventoryManager.GetOwnInventory(GlobalConstants.hotBarInvClassName);
+        if (bpInv != null) seenInventories.Add(bpInv.InventoryID);
+        if (hbInv != null) seenInventories.Add(hbInv.InventoryID);
+        seenInventories.Add(craftingInv.InventoryID);
+
+        foreach (InventoryGeneric opened in player.InventoryManager.OpenedInventories.OfType<InventoryGeneric>())
+        {
+            if (!seenInventories.Add(opened.InventoryID)) continue;
+            foreach (ItemSlot slot in opened)
+            {
+                if (slot != null && !slot.Empty && slot.CanTake())
+                {
+                    sourceSlots.Add((slot, null));
+                }
+            }
+        }
+
+        List<BlockEntityContainer> nearbyContainers = new();
+        if (packet.IncludeNearby && policy.AllowHandbookNearbyCrafting)
+        {
+            int radius = Math.Clamp(
+                packet.SearchRadius,
+                SeraphQoLClientConfig.MinHandbookSearchRadius,
+                SeraphQoLClientConfig.MaxHandbookSearchRadius);
+            nearbyContainers = FindNearbyAllowedContainers(world, player, center, radius, policy, excludePos: null);
+            foreach (BlockEntityContainer container in nearbyContainers)
+            {
+                if (!seenInventories.Add(container.Inventory.InventoryID)) continue;
+                foreach (ItemSlot slot in container.Inventory)
+                {
+                    if (slot != null && !slot.Empty && slot.CanTake())
+                    {
+                        sourceSlots.Add((slot, container));
+                    }
+                }
+            }
+        }
+
+        var recipeSpecs = new List<CraftingRecipeSpec>();
+        foreach (HandbookRecipeCandidatePacket cand in packet.Candidates)
+        {
+            GridRecipe? serverRecipe = FindAuthoritativeGridRecipe(world, cand);
+            if (serverRecipe == null) continue;
+
+            CraftingRecipeIngredient?[] resolved = serverRecipe.ResolvedIngredients ?? Array.Empty<CraftingRecipeIngredient?>();
+            var ingredients = new CraftingIngredientSpec?[resolved.Length];
+            for (int i = 0; i < resolved.Length; i++)
+            {
+                CraftingRecipeIngredient? ing = resolved[i];
+                if (ing == null) continue;
+                string? variantCode = i < cand.SlotIngredientCodes.Count && !string.IsNullOrWhiteSpace(cand.SlotIngredientCodes[i])
+                    ? cand.SlotIngredientCodes[i]
+                    : null;
+
+                ingredients[i] = new CraftingIngredientSpec(
+                    Key: variantCode ?? (ing.Code?.ToString() ?? string.Empty),
+                    Quantity: Math.Max(1, ing.Quantity),
+                    IsTool: ing.IsTool,
+                    ToolDurabilityCost: ing.ToolDurabilityCost,
+                    Matches: item => MatchesServerIngredient(ing, variantCode, item, world, sourceSlots, gridSlots));
+            }
+
+            recipeSpecs.Add(new CraftingRecipeSpec(
+                Width: serverRecipe.Width,
+                Height: serverRecipe.Height,
+                Shapeless: serverRecipe.Shapeless,
+                Ingredients: ingredients,
+                MatchesCurrentGrid: serverRecipe.Matches(player, world, gridSlots, 3)));
+        }
+
+        if (recipeSpecs.Count == 0) return (false, remeshPositions);
+
+        CraftingItemInfo?[] gridInfos = gridSlots.Select(s => ToCraftingItemInfo(s)).ToArray();
+        CraftingItemInfo?[] sourceInfos = sourceSlots.Select(s => ToCraftingItemInfo(s.Slot)).ToArray();
+
+        CraftingFillPlan plan = CraftingFillPlanner.BuildPlan(gridInfos, sourceInfos, recipeSpecs, packet.FillMax);
+        if (!plan.Success) return (false, remeshPositions);
+
+        var dirtyContainers = new HashSet<BlockEntityContainer>();
+        foreach (int clearIdx in plan.SlotsToClear)
+        {
+            if (clearIdx < 0 || clearIdx >= gridSlots.Length) continue;
+            ItemSlot gSlot = gridSlots[clearIdx];
+            if (gSlot.Empty || gSlot.Itemstack == null) continue;
+
+            ItemStack? taken = gSlot.TakeOut(gSlot.StackSize);
+            gSlot.MarkDirty();
+            if (taken != null && taken.StackSize > 0)
+            {
+                StoreOrDropExtractedStack(world, player, taken, nearbyContainers, packet.IncludeNearby, center, dirtyContainers);
+            }
+        }
+
+        bool movedAny = false;
+        foreach (CraftingTransferStep step in plan.Transfers)
+        {
+            if (step.SourceSlotIndex < 0 || step.SourceSlotIndex >= sourceSlots.Count) continue;
+            if (step.TargetGridIndex < 0 || step.TargetGridIndex >= gridSlots.Length) continue;
+
+            (ItemSlot src, BlockEntityContainer? srcContainer) = sourceSlots[step.SourceSlotIndex];
+            ItemSlot dst = gridSlots[step.TargetGridIndex];
+            if (src.Empty || !src.CanTake()) continue;
+
+            int moved = MoveIntoTargetsServer(world, player, src, [dst], step.Quantity);
+            if (moved > 0)
+            {
+                movedAny = true;
+                if (srcContainer != null) dirtyContainers.Add(srcContainer);
+            }
+        }
+
+        if (movedAny)
+        {
+            player.InventoryManager.BroadcastHotbarSlot();
+            foreach (BlockEntityContainer container in dirtyContainers)
+            {
+                container.MarkDirty(true);
+                if (NeedsClientRemesh(container))
+                {
+                    remeshPositions.Add(container.Pos.Copy());
+                }
+            }
+        }
+
+        return (movedAny, remeshPositions);
+    }
+
+    private static GridRecipe? FindAuthoritativeGridRecipe(IWorldAccessor world, HandbookRecipeCandidatePacket cand)
+    {
+        if (world.GridRecipes == null) return null;
+
+        if (cand.RecipeId > 0)
+        {
+            foreach (GridRecipe recipe in world.GridRecipes)
+            {
+                if (recipe.Enabled && recipe.RecipeId == cand.RecipeId)
+                {
+                    return recipe;
+                }
+            }
+        }
+
+        foreach (GridRecipe recipe in world.GridRecipes)
+        {
+            if (!recipe.Enabled) continue;
+            if (recipe.Width != cand.Width || recipe.Height != cand.Height || recipe.Shapeless != cand.Shapeless) continue;
+            string? outCode = recipe.Output?.ResolvedItemStack?.Collectible?.Code?.ToString();
+            if (!string.IsNullOrEmpty(cand.OutputCode)
+                && string.Equals(outCode, cand.OutputCode, StringComparison.OrdinalIgnoreCase))
+            {
+                return recipe;
+            }
+        }
+
+        return null;
+    }
+
+    private static CraftingItemInfo? ToCraftingItemInfo(ItemSlot? slot)
+    {
+        ItemStack? stack = slot?.Itemstack;
+        if (stack?.Collectible == null || stack.StackSize <= 0) return null;
+        string code = stack.Collectible.Code?.ToString() ?? string.Empty;
+        string attrToken = stack.Attributes?.ToJsonToken() ?? string.Empty;
+        return new CraftingItemInfo(
+            ItemCode: code,
+            StackSize: stack.StackSize,
+            MaxStackSize: Math.Max(1, stack.Collectible.MaxStackSize),
+            RemainingDurability: stack.Collectible.GetRemainingDurability(stack),
+            MergeKey: $"{code}|{attrToken}");
+    }
+
+    private static bool MatchesServerIngredient(
+        CraftingRecipeIngredient ingredient,
+        string? variantCode,
+        CraftingItemInfo info,
+        IWorldAccessor world,
+        IReadOnlyList<(ItemSlot Slot, BlockEntityContainer? Container)> sourceSlots,
+        IReadOnlyList<ItemSlot> gridSlots)
+    {
+        if (!string.IsNullOrEmpty(variantCode)
+            && ingredient.MatchingType != EnumRecipeMatchType.Exact
+            && !string.Equals(info.ItemCode, variantCode, StringComparison.OrdinalIgnoreCase))
+        {
+            return false;
+        }
+
+        ItemStack? stack = null;
+        for (int i = 0; i < sourceSlots.Count && stack == null; i++)
+        {
+            ItemStack? s = sourceSlots[i].Slot.Itemstack;
+            if (s?.Collectible == null) continue;
+            string code = s.Collectible.Code?.ToString() ?? string.Empty;
+            if (string.Equals($"{code}|{s.Attributes?.ToJsonToken() ?? string.Empty}", info.MergeKey, StringComparison.Ordinal))
+            {
+                stack = s;
+            }
+        }
+
+        for (int i = 0; i < gridSlots.Count && stack == null; i++)
+        {
+            ItemStack? s = gridSlots[i]?.Itemstack;
+            if (s?.Collectible == null) continue;
+            string code = s.Collectible.Code?.ToString() ?? string.Empty;
+            if (string.Equals($"{code}|{s.Attributes?.ToJsonToken() ?? string.Empty}", info.MergeKey, StringComparison.Ordinal))
+            {
+                stack = s;
+            }
+        }
+
+        if (stack == null || !ingredient.SatisfiesAsIngredient(stack, checkStackSize: false))
+        {
+            return false;
+        }
+
+        if (ingredient.IsTool)
+        {
+            return stack.Collectible.GetRemainingDurability(stack) >= ingredient.ToolDurabilityCost;
+        }
+
+        return true;
     }
 
     private void StoreOrDropExtractedStack(

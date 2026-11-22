@@ -9,7 +9,7 @@ Este documento define el flujo de trabajo y los principios obligatorios para dis
 - **Lenguaje / Runtime**: C# (`.NET 10.0`, `Nullable` habilitado) sobre la API de Vintage Story (`VintagestoryAPI`, `VSEssentials`, `VSSurvivalMod`, `0Harmony`, `protobuf-net`, `Newtonsoft.Json`, `cairo-sharp`).
 - **Idioma en código**: todos los identificadores en código (clases, métodos, propiedades, campos, parámetros, variables locales, constantes, claves JSON/config) deben escribirse **siempre en inglés**.
 - **Proyectos activos**:
-  - `mods/system-ui` (`seraphui`): librería visual reutilizable (cliente) basada en `UiDialogBase`, `UiRichTextBuilder`, `UiComposerExtensions` y `SystemUITheme`.
+  - `mods/system-ui` (`seraphui`): librería visual reutilizable (`Universal`, inicialización UI en cliente) basada en `UiDialogBase`, `UiRichTextBuilder`, `UiComposerExtensions` y `SystemUITheme`.
   - `mods/comerciantes` (`tradersoverhaul`): motor económico, sincronización cliente/servidor, parches Harmony e integración con ConfigLib e i18n (`en`, `es-es`, `es-419`, `ru`).
   - `mods/seraph-qol` (`seraphqol`): suite modular de calidad de vida (inventario, menús radiales, calculadora de aleaciones, indicadores visuales, hotbar refill, rastreo de proyectiles y rebalanceo de fauna) con integración ConfigLib e i18n (`en`, `es-es`, `es-419`, `ru`).
 - **Suites de pruebas (`xUnit`)**:

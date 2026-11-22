@@ -7,16 +7,16 @@
 - **Origen / Desarrollo:** Impulsado con IA · Hecho en Argentina
 - **Versión actual:** `0.1.0`
 - **Estado de desarrollo:** Etapa temprana de desarrollo (puede contener bugs)
-- **Lado (`Side`):** `Client`
+- **Lado (`Side`):** `Universal`
 - **Versión de Vintage Story:** `1.22.0`
 - **Categoría sugerida:** Library / UI
-- **Tags sugeridos:** `Library`, `UI`, `Framework`, `Client-side`, `Theme`
+- **Tags sugeridos:** `Library`, `UI`, `Framework`, `Universal`, `Theme`
 - **Dependencias obligatorias:** `game` (`1.22.0`)
 - **Requerido por:** `Traders Overhaul (tradersoverhaul)`, `Seraph QoL (seraphqol)`
 - **Canales de configuración:** Sin configuración de usuario requerida
 
 ## Resumen corto (ModDB Tagline)
-> Shared client-side UI framework and reusable component library built to match Vintage Story's native interface aesthetic.
+> Shared UI framework and reusable component library built to match Vintage Story's native interface aesthetic.
 
 ## Estado de Media y Templates
 - [x] `publisher/description.html` (HTML TinyMCE-safe actualizado)

@@ -7,7 +7,7 @@
   ],
   "description": "Biblioteca de componentes de interfaz grafica desacoplada y reusable para mods de Vintage Story. Etapa temprana de desarrollo: puede contener bugs. Impulsado con IA · Hecho en Argentina.",
   "version": "0.1.0",
-  "side": "Client",
+  "side": "Universal",
   "iconPath": "modicon.png",
   "dependencies": {
     "game": "1.22.0"

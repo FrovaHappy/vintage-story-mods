@@ -7,6 +7,7 @@ using SeraphQoL.Client;
 using SeraphQoL.Config;
 using SeraphQoL.Exploration;
 using SeraphQoL.Fauna;
+using SeraphQoL.Handbook;
 using SeraphQoL.Interaction;
 using SeraphQoL.Inventory;
 using SeraphQoL.Network;
@@ -60,6 +61,7 @@ public sealed class SeraphQoLModSystem : ModSystem
     private GuiDialogRadialQuickSwap? _radialQuickSwapDialog;
     private InventoryButtonsComposer? _buttonsComposer;
     private GuiDialogRadialToolMode? _radialToolModeDialog;
+    private HandbookRecipeService? _handbookRecipeService;
     private long _clientTickListenerId;
     private int _clientTickCounter;
     private bool _suppressConfigLibEvents;
@@ -71,6 +73,7 @@ public sealed class SeraphQoLModSystem : ModSystem
 
     public FavoritesManager Favorites { get; } = new();
     public LockedSlotsService LockedSlots { get; } = new();
+    public HandbookRecipeService? HandbookService => _handbookRecipeService;
 
     public override void Start(ICoreAPI api)
     {
@@ -81,6 +84,7 @@ public sealed class SeraphQoLModSystem : ModSystem
             ClientConfig.Normalize();
             StoreMergedConfig(api, ClientConfigFile, ClientConfig);
             SeraphQoLClientPatches.ClientInstance = this;
+            SeraphQoLHandbookPatches.ClientInstance = this;
             SeraphQoLCommonPatches.ClientInstance = this;
         }
         else
@@ -105,6 +109,7 @@ public sealed class SeraphQoLModSystem : ModSystem
             if (_isClient)
             {
                 _harmony.CreateClassProcessor(typeof(SeraphQoLClientPatches)).Patch();
+                _harmony.CreateClassProcessor(typeof(SeraphQoLHandbookPatches)).Patch();
             }
         }
     }
@@ -148,6 +153,10 @@ public sealed class SeraphQoLModSystem : ModSystem
             .RegisterMessageType<AlloyScanResultPacket>()
             .RegisterMessageType<AlloyDepositPacket>()
             .RegisterMessageType<AlloyDepositResultPacket>()
+            .RegisterMessageType<RequestHandbookScanPacket>()
+            .RegisterMessageType<HandbookScanResultPacket>()
+            .RegisterMessageType<HandbookFillGridPacket>()
+            .RegisterMessageType<HandbookFillResultPacket>()
             .SetMessageHandler<SortInventoryPacket>(OnServerSortInventory)
             .SetMessageHandler<QuickStorePacket>(OnServerQuickStore)
             .SetMessageHandler<StoreNearbyPacket>(OnServerStoreNearby)
@@ -156,7 +165,9 @@ public sealed class SeraphQoLModSystem : ModSystem
             .SetMessageHandler<HotbarRefillPacket>(OnServerHotbarRefill)
             .SetMessageHandler<SwapSlotsPacket>(OnServerSwapSlots)
             .SetMessageHandler<RequestAlloyScanPacket>(OnServerRequestAlloyScan)
-            .SetMessageHandler<AlloyDepositPacket>(OnServerAlloyDeposit);
+            .SetMessageHandler<AlloyDepositPacket>(OnServerAlloyDeposit)
+            .SetMessageHandler<RequestHandbookScanPacket>(OnServerRequestHandbookScan)
+            .SetMessageHandler<HandbookFillGridPacket>(OnServerHandbookFillGrid);
 
         _projectileTrackerServer = new ProjectileTrackerServer(api, _serverChannel, () => EffectivePolicy);
         _projectileTrackerServer.Start();
@@ -187,6 +198,7 @@ public sealed class SeraphQoLModSystem : ModSystem
         _alloyCalculatorDialog = new GuiDialogAlloyCalculator(api, this, _alloyDepositService);
         _radialQuickSwapDialog = new GuiDialogRadialQuickSwap(api, this);
         _resourceParticlesService = new ResourceParticlesService(api, this);
+        _handbookRecipeService = new HandbookRecipeService(api, this);
 
         _groundHighlightRenderer = new GroundItemHighlightRenderer(api, this);
         api.Event.RegisterRenderer(_groundHighlightRenderer, EnumRenderStage.Ortho, "seraphqol-ground-highlight");
@@ -209,11 +221,17 @@ public sealed class SeraphQoLModSystem : ModSystem
             .RegisterMessageType<AlloyScanResultPacket>()
             .RegisterMessageType<AlloyDepositPacket>()
             .RegisterMessageType<AlloyDepositResultPacket>()
+            .RegisterMessageType<RequestHandbookScanPacket>()
+            .RegisterMessageType<HandbookScanResultPacket>()
+            .RegisterMessageType<HandbookFillGridPacket>()
+            .RegisterMessageType<HandbookFillResultPacket>()
             .SetMessageHandler<ServerPolicySyncPacket>(OnClientServerPolicySync)
             .SetMessageHandler<RemeshContainersPacket>(OnClientRemeshContainers)
             .SetMessageHandler<ProjectileWaypointPacket>(OnClientProjectileWaypoint)
             .SetMessageHandler<AlloyScanResultPacket>(OnClientAlloyScanResult)
-            .SetMessageHandler<AlloyDepositResultPacket>(OnClientAlloyDepositResult);
+            .SetMessageHandler<AlloyDepositResultPacket>(OnClientAlloyDepositResult)
+            .SetMessageHandler<HandbookScanResultPacket>(OnClientHandbookScanResult)
+            .SetMessageHandler<HandbookFillResultPacket>(OnClientHandbookFillResult);
 
         api.Event.LevelFinalize += () =>
         {
@@ -232,6 +250,7 @@ public sealed class SeraphQoLModSystem : ModSystem
             _radialQuickSwapDialog?.TryClose();
             _alloyCalculatorDialog?.TryClose();
             _alloyDepositService?.ClearScanCache();
+            _handbookRecipeService?.ClearScanCache();
             _slotIndicatorRenderer?.ClearCache();
             _animalSexRenderer?.Reset();
             _groundHighlightRenderer?.Reset();
@@ -336,6 +355,19 @@ public sealed class SeraphQoLModSystem : ModSystem
     }
 
     public void SendAlloyDepositPacket(AlloyDepositPacket packet)
+    {
+        _clientChannel?.SendPacket(packet);
+    }
+
+    public void RequestHandbookScanFromClient(int radius)
+    {
+        _clientChannel?.SendPacket(new RequestHandbookScanPacket
+        {
+            SearchRadius = Math.Clamp(radius, SeraphQoLClientConfig.MinHandbookSearchRadius, SeraphQoLClientConfig.MaxHandbookSearchRadius)
+        });
+    }
+
+    public void SendHandbookFillGridFromClient(HandbookFillGridPacket packet)
     {
         _clientChannel?.SendPacket(packet);
     }
@@ -596,6 +628,35 @@ public sealed class SeraphQoLModSystem : ModSystem
         }, player);
     }
 
+    private void OnServerRequestHandbookScan(IServerPlayer player, RequestHandbookScanPacket packet)
+    {
+        if (_inventoryExecutor == null) return;
+        HandbookScanResultPacket result = _inventoryExecutor.HandleHandbookScan(player, packet, EffectivePolicy);
+        _serverChannel?.SendPacket(result, player);
+    }
+
+    private void OnServerHandbookFillGrid(IServerPlayer player, HandbookFillGridPacket packet)
+    {
+        if (_inventoryExecutor == null) return;
+        (bool success, List<BlockPos> remeshPositions) = _inventoryExecutor.HandleHandbookFillGrid(player, packet, EffectivePolicy);
+
+        if (remeshPositions.Count > 0)
+        {
+            _serverChannel?.SendPacket(new RemeshContainersPacket { Positions = remeshPositions }, player);
+        }
+
+        if (packet.IncludeNearby)
+        {
+            HandbookScanResultPacket scan = _inventoryExecutor.HandleHandbookScan(
+                player,
+                new RequestHandbookScanPacket { SearchRadius = packet.SearchRadius },
+                EffectivePolicy);
+            _serverChannel?.SendPacket(scan, player);
+        }
+
+        _serverChannel?.SendPacket(new HandbookFillResultPacket { Success = success }, player);
+    }
+
     private void OnClientServerPolicySync(ServerPolicySyncPacket packet)
     {
         EffectivePolicy = packet.ToDisplayPolicy();
@@ -631,6 +692,16 @@ public sealed class SeraphQoLModSystem : ModSystem
     private void OnClientAlloyDepositResult(AlloyDepositResultPacket packet)
     {
         _alloyCalculatorDialog?.RefreshForFirepitPos(packet.FirepitPos);
+    }
+
+    private void OnClientHandbookScanResult(HandbookScanResultPacket packet)
+    {
+        _handbookRecipeService?.ApplyServerScanResult(packet);
+    }
+
+    private void OnClientHandbookFillResult(HandbookFillResultPacket packet)
+    {
+        _handbookRecipeService?.OnServerFillResult(packet);
     }
 
     public void OnFirepitGuiOpened(GuiDialogBlockEntityFirepit firepitDialog)
@@ -1209,10 +1280,12 @@ public sealed class SeraphQoLModSystem : ModSystem
         _slotIndicatorRenderer?.Dispose();
         _animalSexRenderer?.Dispose();
         _buttonsComposer?.Dispose();
+        _handbookRecipeService?.Dispose();
         _harmony?.UnpatchAll(_harmonyId);
         if (_isClient)
         {
             SeraphQoLClientPatches.ClientInstance = null;
+            SeraphQoLHandbookPatches.ClientInstance = null;
             if (ReferenceEquals(SeraphQoLCommonPatches.ClientInstance, this))
             {
                 SeraphQoLCommonPatches.ClientInstance = null;
