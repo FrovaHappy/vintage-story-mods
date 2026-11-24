@@ -93,8 +93,31 @@
       <li style="margin-bottom: 6px;"><strong>Economy Presets:</strong> <em>Stingy</em> (higher buy prices, 75% sell payout), <em>Balanced</em> (default 100%), or <em>Businessman</em> (120% sell payout).</li>
       <li style="margin-bottom: 6px;"><strong>Directory Sync Mode:</strong> <em>Last Visited Snapshot</em> (default, rewards revisiting traders) or <em>Live Known Traders</em> (updates automatically as days pass).</li>
       <li style="margin-bottom: 6px;"><strong>Saturation Scope:</strong> <em>Nearby Partial</em> (default), <em>Local Only</em>, or <em>Global</em> &mdash; with tunable spillover radius, recovery rate, and floor.</li>
-      <li style="margin-bottom: 6px;"><strong>Per-Item Price Overrides:</strong> Custom base prices and wildcard prefixes can be specified directly in <code style="background-color: #221a13; color: #ffffff; padding: 1px 5px;">ModConfig/tradersoverhaul.json</code> under <code style="background-color: #221a13; color: #ffffff; padding: 1px 5px;">ItemValueOverrides</code>.</li>
+      <li style="margin-bottom: 6px;"><strong>Per-Item Price Overrides:</strong> Custom base prices and wildcard prefixes can be specified directly in <code style="background-color: #221a13; color: #ffffff; padding: 1px 5px;">ModConfig/tradersoverhaul.json</code> under <code style="background-color: #221a13; color: #ffffff; padding: 1px 5px;">ItemValueOverrides</code> (see guide below).</li>
       <li style="margin-bottom: 0;"><strong>Optional Inventory Valuation:</strong> Toggle <code style="background-color: #221a13; color: #ffffff; padding: 1px 5px;">ShowValuationInInventoryTooltip</code> to preview base values on normal inventory tooltips.</li>
+    </ul>
+  </div>
+
+  <div style="font-size: 16px; font-weight: bold; color: #ffffff; margin: 14px 0 8px 0;">
+    Custom Item Price Overrides (ItemValueOverrides)
+  </div>
+  <div style="max-width: 980px; background-color: #31261c; border-top: 2px solid #1e1711; border-left: 2px solid #1e1711; border-right: 2px solid #695641; border-bottom: 2px solid #695641; padding: 12px 16px; margin-bottom: 16px; font-size: 13px; color: #ffffff; line-height: 1.5;">
+    <p style="margin: 0 0 8px 0;">
+      You can define custom base gear values for specific items or entire item families directly in <code style="background-color: #221a13; color: #ffffff; padding: 1px 5px; border: 1px solid #5c4a37;">ModConfig/tradersoverhaul.json</code> without modifying mod assets. Add your entries inside the <code style="background-color: #221a13; color: #ffffff; padding: 1px 5px; border: 1px solid #5c4a37;">&quot;ItemValueOverrides&quot;</code> block:
+    </p>
+    <pre style="background-color: #221a13; color: #dfd6cb; padding: 10px 14px; border: 1px solid #5c4a37; font-family: Consolas, monospace; font-size: 12px; line-height: 1.45; overflow-x: auto; margin: 0 0 10px 0;">{
+  &quot;ItemValueOverrides&quot;: {
+    &quot;game:ingot-copper&quot;: 2.5,
+    &quot;game:axe-felling-*&quot;: 3.0,
+    &quot;game:pickaxe-tinbronze&quot;: 5.0,
+    &quot;game:dirt-*&quot;: 0.0
+  }
+}</pre>
+    <ul style="margin: 0; padding-left: 18px;">
+      <li style="margin-bottom: 4px;"><strong>Base Price in Gears:</strong> The numeric value represents the base price in rusty gears (<code style="background-color: #221a13; color: #ffffff; padding: 1px 4px; border: 1px solid #5c4a37;">1.0 = 1 ⚙</code>) before trader archetype affinity and demand bonuses are applied.</li>
+      <li style="margin-bottom: 4px;"><strong>Disabling Items (<code style="background-color: #221a13; color: #ffffff; padding: 1px 4px; border: 1px solid #5c4a37;">0.0</code>):</strong> Setting an item or prefix to <code style="background-color: #221a13; color: #ffffff; padding: 1px 4px; border: 1px solid #5c4a37;">0.0</code> marks it as unsellable / blacklisted.</li>
+      <li style="margin-bottom: 4px;"><strong>Wildcard Support (<code style="background-color: #221a13; color: #ffffff; padding: 1px 4px; border: 1px solid #5c4a37;">*</code>):</strong> Keys ending with an asterisk (e.g. <code style="background-color: #221a13; color: #ffffff; padding: 1px 4px; border: 1px solid #5c4a37;">&quot;game:axe-felling-*&quot;</code>) match all item codes starting with that prefix.</li>
+      <li style="margin-bottom: 0;"><strong>Resolution Priority:</strong> Exact item codes always take priority over wildcards. If multiple wildcards match, the longest (most specific) prefix wins.</li>
     </ul>
   </div>
 
