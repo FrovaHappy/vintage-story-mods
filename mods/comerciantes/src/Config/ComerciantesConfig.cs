@@ -41,16 +41,18 @@ public sealed class ComerciantesConfig
 
     public double SaturationSpilloverRadius { get; set; } = 1500.0;
     public double SaturationSpilloverFactor { get; set; } = 0.35;
-    public double SaturationMinFloor { get; set; } = 0.20;
-    public double SaturationS50 { get; set; } = 25.0;
-    public double SaturationCurvePower { get; set; } = 1.25;
-    public double SaturationRecoveryPerDay { get; set; } = 6.0;
+    public double SaturationMinFloor { get; set; } = 0.10;
+    public double SaturationS50 { get; set; } = 15.0;
+    public double SaturationCurvePower { get; set; } = 1.6;
+    public double SaturationRecoveryPerDay { get; set; } = 8.0;
 
     public double DailyDemandMinPct { get; set; } = 20.0;
     public double DailyDemandMaxPct { get; set; } = 50.0;
     public double MinDurabilityRatio { get; set; } = 0.80;
     public double AntiArbitrageCapFactor { get; set; } = 0.85;
     public double MaxPhysicalTradeDistance { get; set; } = 6.0;
+
+    public Dictionary<string, double> ItemValueOverrides { get; set; } = new(StringComparer.OrdinalIgnoreCase);
 
     public bool ShowValuationInInventoryTooltip { get; set; } = false;
     public bool EnableInstantTrade { get; set; } = false;
@@ -154,6 +156,38 @@ public sealed class ComerciantesConfig
                 return false;
             case nameof(MaxPhysicalTradeDistance):
                 if (TryToDouble(raw, out double dist)) { MaxPhysicalTradeDistance = dist; return true; }
+                return false;
+            case nameof(ItemValueOverrides):
+                if (valueAttr is ITreeAttribute treeOverrides)
+                {
+                    var dict = new Dictionary<string, double>(StringComparer.OrdinalIgnoreCase);
+                    foreach (var kvp in treeOverrides)
+                    {
+                        object? valObj = kvp.Value?.GetValue();
+                        if (valObj != null && TryToDouble(valObj, out double val))
+                        {
+                            dict[kvp.Key] = val;
+                        }
+                    }
+                    ItemValueOverrides = dict;
+                    return true;
+                }
+                if (raw is string jsonStr && !string.IsNullOrWhiteSpace(jsonStr))
+                {
+                    try
+                    {
+                        var parsed = Newtonsoft.Json.JsonConvert.DeserializeObject<Dictionary<string, double>>(jsonStr);
+                        if (parsed != null)
+                        {
+                            ItemValueOverrides = new Dictionary<string, double>(parsed, StringComparer.OrdinalIgnoreCase);
+                            return true;
+                        }
+                    }
+                    catch
+                    {
+                        return false;
+                    }
+                }
                 return false;
             default:
                 return false;

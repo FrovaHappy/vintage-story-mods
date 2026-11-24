@@ -68,6 +68,7 @@ public sealed class ComerciantesModSystem : ModSystem, ITraderClientGateway
     public override void AssetsFinalize(ICoreAPI api)
     {
         Valuations.LoadFromAssets(api);
+        Valuations.ApplyConfigOverrides(Config.ItemValueOverrides);
         Affinities.LoadFromAssets(api);
     }
 
@@ -175,6 +176,7 @@ public sealed class ComerciantesModSystem : ModSystem, ITraderClientGateway
         {
             Config = loaded;
         }
+        Valuations.ApplyConfigOverrides(Config.ItemValueOverrides);
         UpdateConfigTimestamp();
     }
 

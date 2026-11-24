@@ -494,4 +494,43 @@ public sealed class PriceCalculatorTests
         Assert.False(overFeather.IsTradeable);
         Assert.True(overFeather.IsOverstocked);
     }
+
+    [Fact]
+    public void Evaluate_Tier3ToolWithMaxSaturation_FallsBelowFloorAndBecomesUntradeable()
+    {
+        (PriceCalculator calc, WorldSaturationRegistry sat) = CreateCalculator();
+        var config = new ComerciantesConfig(); // default config: SaturationMinFloor = 0.10, S50 = 15.0, CurvePower = 1.6
+        var pos = new BlockPos(0, 100, 0);
+
+        // game:axe-felling-tinbronze has base value 4.0, maxStackSize = 1
+        // In "buildmaterials" trader (affinity 1.15):
+        // Fresh price: 4.0 * 1.15 = 4.6 -> 5 gears
+        var tinAxe = new TestItem("game:axe-felling-tinbronze", maxStackSize: 1);
+        ItemValuationResult fresh = calc.Evaluate(
+            new ItemStack(tinAxe, 1), 1, "buildmaterials", pos, 1.0,
+            new HashSet<string>(), new Dictionary<string, int>(), config);
+        Assert.True(fresh.IsTradeable);
+        Assert.Equal(5, fresh.LotGearPayout);
+
+        // Heavily saturate this trader with tinbronze axes (500 GEV)
+        sat.RecordSale(1, pos, 1.0, "game:axe-felling-tinbronze", 500.0, config);
+
+        // At min floor 0.10: unit price = 4.0 * 1.15 * 0.10 = 0.46 < 0.50
+        // Because maxStackSize is 1 and unitPrice < 0.50, TryComputeStandardizedLot returns false (untradeable).
+        ItemValuationResult saturated = calc.Evaluate(
+            new ItemStack(tinAxe, 1), 1, "buildmaterials", pos, 1.0,
+            new HashSet<string>(), new Dictionary<string, int>(), config);
+        Assert.False(saturated.IsTradeable);
+        Assert.Equal(0, saturated.LotGearPayout);
+
+        // Also test a base 3.0 tool (game:pickaxe-copper, maxStackSize: 1) even in high affinity "survivalgoods" (1.35)
+        // Unit price = 3.0 * 1.35 * 0.10 = 0.405 < 0.50 -> untradeable
+        var copperPick = new TestItem("game:pickaxe-copper", maxStackSize: 1);
+        sat.RecordSale(1, pos, 1.0, "game:pickaxe-copper", 500.0, config);
+        ItemValuationResult saturatedPick = calc.Evaluate(
+            new ItemStack(copperPick, 1), 1, "survivalgoods", pos, 1.0,
+            new HashSet<string>(), new Dictionary<string, int>(), config);
+        Assert.False(saturatedPick.IsTradeable);
+        Assert.Equal(0, saturatedPick.LotGearPayout);
+    }
 }

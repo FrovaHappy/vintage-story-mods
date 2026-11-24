@@ -89,9 +89,9 @@ $$\Delta S = \text{ValorBase} \times \text{CantidadVendida}$$
 $$M_{\text{saturación}}(S) = \max\left(M_{\min},\; \frac{1}{1 + \left(\frac{S}{S_{50}}\right)^{p}}\right)$$
 
 Parámetros por defecto recomendados:
-- **$S_{50} = 25.0$ GEV** (tras vender ~`25 ⚙` de valor base en el mismo ítem/familia, el multiplicador cae al 50%).
-- **$p = 1.25$** (pendiente progresiva).
-- **$M_{\min} = 0.20$** (piso del 20%; nunca paga menos de la quinta parte, salvo si el lote queda por debajo de 1 engranaje).
+- **$S_{50} = 15.0$ GEV** (tras vender ~`15 ⚙` de valor base en el mismo ítem/familia, el multiplicador cae al 50%).
+- **$p = 1.6$** (pendiente progresiva, más agresiva).
+- **$M_{\min} = 0.10$** (piso del 10%; nunca paga menos de la décima parte, salvo si el lote queda por debajo de 1 engranaje).
 - **Evaluación marginal**: En ventas de varias unidades/lotes simultáneos, cada unidad o lote incremental suma su $\Delta S$ antes de evaluar la siguiente, evitando que vender 64 unidades juntas pague todo al 100%.
 
 | Volumen Acumulado $S$ (GEV) | $M_{\text{saturación}}$ | Efecto práctico (ej. hacha de `4 ⚙`) |
@@ -99,14 +99,14 @@ Parámetros por defecto recomendados:
 | `0` (Sin ventas previas) | **100%** (`1.00x`) | Primera venta sin penalización |
 | `10 GEV` (~2–3 hachas) | **76%** (`0.76x`) | Desgaste moderado |
 | `25 GEV` (~6 hachas) | **50%** (`0.50x`) | Mercado medio saturado |
-| `50 GEV` (~12–13 hachas) | **30%** (`0.30x`) | Farmeo fuertemente desincentivado |
-| `80+ GEV` (~20+ hachas) | **20%** (`0.20x`, piso) | Piso mínimo alcanzado |
+| `50 GEV` (~12–13 hachas) | **13%** (`0.13x`) | Farmeo fuertemente desincentivado |
+| `80+ GEV` (~20+ hachas) | **10%** (`0.10x`, piso) | Piso mínimo alcanzado |
 
 ### Propagación a Comerciantes Cercanos (`NearbyPartial` por defecto)
 - **Radio**: `1500` bloques (`SaturationSpilloverRadius`).
 - **Factor máximo de contagio**: `0.35` (`SaturationSpilloverFactor = 35%`), atenuado linealmente por distancia:
   $$\Delta S_{\text{vecino}} = \Delta S \times 0.35 \times \max\left(0,\; 1 - \frac{\text{distancia}}{1500}\right)$$
-- **Recuperación diaria (`RecoveryPerDay`)**: **`6.0` GEV/día** por comerciante (recupera `25 GEV` en ~`4.2` días de juego).
+- **Recuperación diaria (`RecoveryPerDay`)**: **`8.0` GEV/día** por comerciante (recupera `25 GEV` en ~`3.1` días de juego).
 
 ---
 
@@ -134,7 +134,7 @@ Supongamos un **`axe-felling-tinbronze`** con **`ValorBase = 4 ⚙`** (100% dura
 - **Caso 2 — Comerciante `survivalgoods` (En lista de Ítems Requeridos del Día, sin saturación)**:
   - $4 \times 1.35 \times 1.40 \times 1.00 = 7.56 \rightarrow$ **`8 ⚙`** (`▲ +100%`).
 - **Caso 3 — Comerciante `survivalgoods` (Saturado con $S = 25$ GEV, sin demanda del día)**:
-  - $4 \times 1.35 \times 1.00 \times 0.50 = 2.7 \rightarrow$ **`3 ⚙`** (`▼ -25%`).
+  - $4 	imes 1.35 	imes 1.00 	imes 0.33 = 1.78 \rightarrow$ **`2 ⚙`** (`▼ -25%`).
 - **Caso 4 — Comerciante `clothing` (Baja afinidad, sin saturación)**:
   - $4 \times 0.50 \times 1.00 \times 1.00 = 2.0 \rightarrow$ **`2 ⚙`** (`▼ -50%`).
 - **Caso 5 — Ítem barato: `feather` (`ValorBase = 0.0625 ⚙`, `16x = 1 ⚙`)**:

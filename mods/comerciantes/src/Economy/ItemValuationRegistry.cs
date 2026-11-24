@@ -28,6 +28,10 @@ public sealed class ItemValuationRegistry
     private readonly Dictionary<string, double> _explicitValues = new(StringComparer.OrdinalIgnoreCase);
     private readonly Dictionary<string, double> _tradelistValues = new(StringComparer.OrdinalIgnoreCase);
     private readonly Dictionary<string, double> _recipeValues = new(StringComparer.OrdinalIgnoreCase);
+    // Exact-match overrides from ComerciantesConfig.ItemValueOverrides (highest priority).
+    private readonly Dictionary<string, double> _configOverrideExact = new(StringComparer.OrdinalIgnoreCase);
+    // Wildcard (suffix-*) overrides sorted descending by prefix length so the longest prefix wins.
+    private readonly List<(string Prefix, double Value)> _configOverrideWildcards = [];
 
     public void LoadFromAssets(ICoreAPI api)
     {
@@ -62,6 +66,33 @@ public sealed class ItemValuationRegistry
         {
             _explicitValues[key] = value;
         }
+    }
+
+    /// <summary>
+    /// Applies per-item value overrides from <see cref="ComerciantesConfig.ItemValueOverrides"/>.
+    /// Keys ending in '*' are treated as prefix wildcards; the longest matching prefix wins.
+    /// Exact keys always beat wildcards. Calling this again replaces all previous overrides.
+    /// </summary>
+    public void ApplyConfigOverrides(IReadOnlyDictionary<string, double> overrides)
+    {
+        _configOverrideExact.Clear();
+        _configOverrideWildcards.Clear();
+
+        foreach ((string key, double value) in overrides)
+        {
+            if (key.EndsWith('*'))
+            {
+                string prefix = key[..^1]; // strip trailing '*'
+                _configOverrideWildcards.Add((prefix, value));
+            }
+            else
+            {
+                _configOverrideExact[key] = value;
+            }
+        }
+
+        // Sort descending by prefix length so the longest (most specific) wildcard is checked first.
+        _configOverrideWildcards.Sort((a, b) => b.Prefix.Length.CompareTo(a.Prefix.Length));
     }
 
     private void LoadVanillaTradelistValues(ICoreAPI api)
@@ -194,22 +225,42 @@ public sealed class ItemValuationRegistry
         if (stack?.Collectible == null || IsBlacklisted(stack.Collectible)) return 0.0;
 
         string fullCode = stack.Collectible.Code.ToString();
+
+        // 1. Exact config override (highest priority, can also zero-out an item)
+        if (_configOverrideExact.TryGetValue(fullCode, out double configExact))
+        {
+            return configExact;
+        }
+
+        // 2. Wildcard config override (longest matching prefix wins)
+        foreach ((string prefix, double wildcardValue) in _configOverrideWildcards)
+        {
+            if (fullCode.StartsWith(prefix, StringComparison.OrdinalIgnoreCase))
+            {
+                return wildcardValue;
+            }
+        }
+
+        // 3. Explicit asset value (item_values.json)
         if (_explicitValues.TryGetValue(fullCode, out double explicitVal))
         {
             return explicitVal;
         }
 
+        // 4. Family/path heuristics
         double? familyVal = EstimateByPath(stack.Collectible.Code.Path, stack);
         if (familyVal.HasValue)
         {
             return familyVal.Value;
         }
 
+        // 5. Vanilla tradelist average
         if (_tradelistValues.TryGetValue(fullCode, out double tradelistVal))
         {
             return tradelistVal;
         }
 
+        // 6. Recipe-inferred value
         if (_recipeValues.TryGetValue(fullCode, out double recipeVal))
         {
             return recipeVal;

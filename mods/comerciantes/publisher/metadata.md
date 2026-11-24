@@ -13,7 +13,7 @@
 - **Tags sugeridos:** `Traders`, `Economy`, `QoL`, `UI`, `ConfigLib`
 - **Dependencias obligatorias:** `game` (`1.22.0`), `survival` (`1.22.0`), `seraphui` (`0.1.0`)
 - **Idiomas soportados:** `en`, `es-es`, `es-419`, `ru`
-- **Canales de configuración:** `ModConfig/tradersoverhaul.json` + **ConfigLib** (apertura de directorio vía atajo `K` o botón en la ventana de comercio)
+- **Canales de configuración:** `ModConfig/tradersoverhaul.json` (incluyendo `ItemValueOverrides` para precios base y wildcards por ítem) + **ConfigLib** (apertura de directorio vía atajo `K` o botón en la ventana de comercio)
 
 ## Resumen corto (ModDB Tagline)
 > A living trader economy for Vintage Story: universal selling, archetype affinities, daily wanted bonuses, anti-farming saturation, modern trade UI, and Global Trader Directory.

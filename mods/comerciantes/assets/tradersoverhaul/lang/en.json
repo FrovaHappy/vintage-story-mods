@@ -108,7 +108,7 @@
   "config-saturation-curve-power": "Saturation curve exponent",
   "config-saturation-curve-power-comment": "Controls how fast payout drops as an item becomes saturated",
   "config-saturation-min-floor": "Minimum payout floor",
-  "config-saturation-min-floor-comment": "Minimum multiplier a saturated item can drop to (0.20 = 20%)",
+  "config-saturation-min-floor-comment": "Minimum multiplier a saturated item can drop to (0.10 = 10%)",
   "config-saturation-recovery-per-day": "Daily recovery (GEV/day)",
   "config-saturation-recovery-per-day-comment": "Amount of saturation cleared per elapsed in-game day",
   "config-section-rules": "Reward and Trade Rules",

@@ -54,6 +54,16 @@ public sealed class ComerciantesConfigTests
 
         Assert.True(config.ApplySetting(nameof(ComerciantesConfig.MaxPhysicalTradeDistance), new LongAttribute(9L)));
         Assert.Equal(9.0, config.MaxPhysicalTradeDistance, 4);
+
+        var tree = new TreeAttribute();
+        tree.SetDouble("game:ingot-copper", 3.5);
+        tree.SetDouble("game:axe-felling-*", 4.0);
+        Assert.True(config.ApplySetting(nameof(ComerciantesConfig.ItemValueOverrides), tree));
+        Assert.Equal(3.5, config.ItemValueOverrides["game:ingot-copper"], 4);
+        Assert.Equal(4.0, config.ItemValueOverrides["game:axe-felling-*"], 4);
+
+        Assert.True(config.ApplySetting(nameof(ComerciantesConfig.ItemValueOverrides), new StringAttribute("{\"game:pickaxe-*\": 2.0}")));
+        Assert.Equal(2.0, config.ItemValueOverrides["game:pickaxe-*"], 4);
     }
 
     [Fact]

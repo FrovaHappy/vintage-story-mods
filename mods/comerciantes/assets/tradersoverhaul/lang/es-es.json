@@ -117,7 +117,7 @@
   "config-saturation-curve-power": "Exponente de curva de saturación",
   "config-saturation-curve-power-comment": "Controla qué tan rápido cae la recompensa al saturar un producto",
   "config-saturation-min-floor": "Piso mínimo de pago",
-  "config-saturation-min-floor-comment": "Multiplicador mínimo al que puede caer un ítem saturado (0.20 = 20%)",
+  "config-saturation-min-floor-comment": "Multiplicador mínimo al que puede caer un ítem saturado (0.10 = 10%)",
   "config-saturation-recovery-per-day": "Recuperación diaria (GEV/día)",
   "config-saturation-recovery-per-day-comment": "Cantidad de saturación que se limpia por cada día del juego transcurrido",
 

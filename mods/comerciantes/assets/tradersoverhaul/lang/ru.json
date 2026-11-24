@@ -117,7 +117,7 @@
   "config-saturation-curve-power": "Показатель кривой насыщения",
   "config-saturation-curve-power-comment": "Определяет скорость падения выплаты при насыщении товара",
   "config-saturation-min-floor": "Минимальный порог выплаты",
-  "config-saturation-min-floor-comment": "Минимальный множитель, до которого может упасть цена насыщенного товара (0.20 = 20%)",
+  "config-saturation-min-floor-comment": "Минимальный множитель, до которого может упасть цена насыщенного товара (0.10 = 10%)",
   "config-saturation-recovery-per-day": "Восстановление за день (GEV/день)",
   "config-saturation-recovery-per-day-comment": "Количество насыщения, снимаемое за каждый прошедший игровой день",
 

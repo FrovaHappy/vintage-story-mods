@@ -22,6 +22,18 @@ public sealed class WorldSaturationRegistryTests
     }
 
     [Fact]
+    public void EvaluateMultiplier_DefaultConfig_UsesTightenedFloorAndCurve()
+    {
+        var registry = new WorldSaturationRegistry();
+        var config = new ComerciantesConfig();
+
+        // New defaults: S50 = 15.0, CurvePower = 1.6, MinFloor = 0.10
+        Assert.Equal(1.0, registry.EvaluateMultiplier(0.0, config), 4);
+        Assert.Equal(0.5, registry.EvaluateMultiplier(15.0, config), 4);
+        Assert.Equal(0.10, registry.EvaluateMultiplier(500.0, config), 4);
+    }
+
+    [Fact]
     public void RecordSale_LocalOnly_DoesNotAffectOtherTraders()
     {
         var registry = new WorldSaturationRegistry();
